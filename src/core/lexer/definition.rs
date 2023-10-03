@@ -144,8 +144,8 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
             return false;
         }
         tokens.push(Token::new(
-            compound_token_type.to_string(),
-            compound_token.to_string(),
+            String::from(compound_token_type),
+            compound_token,
             line_number,
         ));
         true

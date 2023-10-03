@@ -1,6 +1,6 @@
-use crate::core::lexer::tokens::SEMICOLON;
-use crate::core::parser::ast::{Expression, Op, Statement};
 use crate::core::parser::ast::Expression::Number;
+use crate::core::parser::ast::{Expression, Op};
+use crate::core::parser::definition::ParseError;
 use crate::core::token::Token;
 
 pub struct ExpressionHandler<'a> {
@@ -16,115 +16,105 @@ impl<'a> ExpressionHandler<'a> {
         }
     }
 
-    pub fn parse(&mut self) -> Expression {
-        let mut token_type = self.start_token[self.current].token_type.clone();
-
-        if token_type == SEMICOLON.to_string() {
-            panic!("Expected expression. Got semicolon");
-        }
-
-        if token_type == "ASTERISK" || token_type == "DIV" {
-            panic!("Expected expression. Got operator");
-        }
-
-        if token_type == "NUMBER" {
-            return self.handle_term();
-        }
-
-        if token_type == "IDENTIFIER" {
-            return self.handle_identifier();
-        }
-
-        if token_type == "OPEN_PARENTHESIS" {
-            return self.handle_parenthesis();
-        }
-
-        return self.handle_bin_op();
+    // peek function
+    pub fn peek(&mut self) -> &Token {
+        &self.start_token[self.current]
     }
 
-    // method to handle function calls
-
-    fn handle_function_call(&mut self) -> Expression {
-        Expression::Identifier(self.start_token[self.current].literal.clone())
-    }
-
-    fn handle_parenthesis(&mut self) -> Expression {
-        Expression::Identifier(self.start_token[self.current].literal.clone())
-    }
-
-    fn handle_bin_op(&mut self, expression: Expression) -> Expression {
-        let operator_type = self.start_token[self.current].token_type.clone();
-        let mut left = expression;
+    //Move ahead to other token
+    pub fn move_ahead(&mut self) {
         self.current += 1;
-        let mut right = Expression::Identifier(self.start_token[self.current].literal.clone());
-        // if right token type is semicolon, throw error
-        if self.start_token[self.current].token_type == SEMICOLON.to_string() {
-            panic!("Expected expression. Got semicolon");
-        }
-
-        // if right token type is operator, throw error
-        if self.start_token[self.current].token_type == "ASTERISK" || self.start_token[self.current].token_type == "DIV" || self.start_token[self.current].token_type == "ADD" || self.start_token[self.current].token_type == "SUB" {
-            panic!("Expected expression. Got operator");
-        }
-
-        // At this point the second part of Binary operator can be, a number, parenthesis, identifier or function call
-        // if right token type is number, then we should return the expression
-
-        let operator_type_enum = match operator_type {
-            String::from("ADD") => Op::Add,
-            String::from("SUB") => Op::Subtract,
-            String::from("ASTERISK") => Op::Multiply,
-            String::from("DIV") => Op::Divide,
-            _ => panic!("Unexpected operator type {}", operator_type)
-        };
-
-        // if right token type is parenthesis, then we should return the expression
-        if self.start_token[self.current].token_type == "OPEN_PARENTHESIS" {
-            return Expression::BinOp(Box::new(left), operator_type_enum, Box::new(self.handle_parenthesis()));
-        }
-
-        // if right token type is identifier, then we should return the expression
-        if self.start_token[self.current].token_type == "IDENTIFIER" {
-            return Expression::BinOp(Box::new(left), operator_type_enum, Box::new(self.handle_identifier()));
-        }
-
-        if self.start_token[self.current].token_type == "NUMBER" {
-            return Expression::BinOp(Box::new(left), operator_type_enum, Box::new(self.handle_term()));
-        }
-
-        // So many cases we need to throw error here.
-        // I will change this later on what the exact token was received here.
-        panic!("Unexpected token type {}", self.start_token[self.current].token_type);
     }
 
-    fn handle_identifier(&mut self) -> Expression {
-        Expression::Identifier(self.start_token[self.current].literal.clone())
-    }
-
-    fn handle_factor(&mut self) -> Expression {
-        Expression::Identifier(self.start_token[self.current].literal.clone())
-    }
-
-    fn handle_term(&mut self) -> Expression {
-        let mut token_type = self.start_token[self.current].token_type.clone();
-        /*
-           * If current type is a number, then check if next one is an operator or semicolon
-         */
-
-        if token_type == "NUMBER" {
-            let number = self.start_token[self.current].literal.clone();
-            self.current += 1;
-            token_type = self.start_token[self.current+1].token_type.clone();
-            if token_type == "SEMICOLON" {
-                return Number(number);
+    pub fn expression(&mut self) -> Result<(Expression, usize), ParseError> {
+        // Handle term
+        let mut left = self.handle_term()?;
+        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" {
+            let operation = self.peek().token_type.clone();
+            self.move_ahead();
+            let right = self.handle_term()?;
+            let mut op = Op::Add;
+            if operation == "MINUS" {
+                op = Op::Subtract;
             }
-
-            // Now the next character must be an operator or parenthesis, otherwise throw error
-            if token_type == "ADD" || token_type == "SUB" {
-                return self.handle_bin_op(Number(number));
-            }
+            left = Expression::BinOp(Box::new(left), op, Box::new(right));
         }
 
-        Expression::Identifier(self.start_token[self.current].literal.clone())
+        Ok((left, self.current))
+    }
+
+    fn handle_term(&mut self) -> Result<Expression, ParseError> {
+        let mut left = self.handle_factor()?;
+        while self.peek().token_type == "ASTERISK" || self.peek().token_type == "SLASH" {
+            let operation = self.peek().token_type.clone();
+            self.move_ahead();
+            let right = self.handle_factor()?;
+            let mut op = Op::Multiply;
+            if operation == "SLASH" {
+                op = Op::Divide;
+            }
+            left = Expression::BinOp(Box::new(left), op, Box::new(right));
+        }
+
+        // check if LParen, number or identifier
+        while self.peek().token_type == "LPAREN"
+            || self.peek().token_type == "NUMBER"
+            || self.peek().token_type == "IDENTIFIER"
+        {
+            let right = self.handle_factor()?;
+            left = Expression::BinOp(Box::new(left), Op::Multiply, Box::new(right));
+        }
+
+        Ok(left)
+    }
+
+    fn handle_factor(&mut self) -> Result<Expression, ParseError> {
+        let mut left_token_type = self.peek().token_type.clone();
+        //  Handle Number, parenthesis, prefix expression
+        if left_token_type == *"NUMBER" {
+            let n = Number(self.peek().literal.clone());
+            self.move_ahead();
+            return Ok(n);
+        }
+
+        if left_token_type == *"MINUS" {
+            self.move_ahead();
+            let expr = self.handle_factor()?;
+            return Ok(Expression::UnaryOp(Op::Subtract, Box::new(expr)));
+        }
+
+        if left_token_type == *"PLUS" {
+            self.move_ahead();
+            let expr = self.handle_factor()?;
+            return Ok(Expression::UnaryOp(Op::Add, Box::new(expr)));
+        }
+
+        if left_token_type == *"LPAREN" {
+            self.move_ahead();
+            let (expression, _) = self.expression()?;
+            left_token_type = self.peek().token_type.clone();
+            return if left_token_type == *"RPAREN" {
+                Ok(expression)
+            } else {
+                Err(ParseError::UnexpectedToken {
+                    expected: String::from("RPAREN"),
+                    found: left_token_type,
+                })
+            };
+        }
+
+        // handle string
+        if left_token_type == *"STRING" {
+            let s = self.peek().literal.clone();
+            self.move_ahead();
+            return Ok(Expression::StringLiteral(s));
+        }
+
+        // Handle identifier and function calls
+
+        Err(ParseError::UnexpectedToken {
+            expected: String::from("NUMBER, LPAREN"),
+            found: left_token_type,
+        })
     }
 }

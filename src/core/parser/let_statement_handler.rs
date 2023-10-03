@@ -1,4 +1,5 @@
-use crate::core::parser::ast::{Expression, Statement};
+use crate::core::parser::ast::Statement;
+use crate::core::parser::definition::ParseError;
 use crate::core::parser::expression_handler::ExpressionHandler;
 use crate::core::token::Token;
 
@@ -15,8 +16,7 @@ impl<'a> LetStatementHandler<'a> {
         }
     }
 
-    pub fn parse(mut self) -> (Statement, usize) {
-
+    pub fn parse(mut self) -> Result<(Statement, usize), ParseError> {
         let mut token_type = self.start_token[self.current].token_type.clone();
         let identifier;
         if token_type == "IDENTIFIER" {
@@ -25,7 +25,6 @@ impl<'a> LetStatementHandler<'a> {
         } else {
             panic!("Expected IDENTIFIER, got {}", token_type);
         }
-
 
         token_type = self.start_token[self.current].token_type.clone();
 
@@ -37,13 +36,17 @@ impl<'a> LetStatementHandler<'a> {
 
         // We expect an expression here, if its not expression then throw error
         let mut expression_parser = ExpressionHandler::new(&self.start_token[self.current..]);
-        let expression = expression_parser.parse();
+        let expression = expression_parser.expression();
 
-        (Statement::Let(
-            identifier,
-            Box::new(expression)
-        ), self.current)
-
-
+        match expression {
+            Ok((expression, consumed)) => {
+                self.current += consumed;
+                Ok((
+                    Statement::Let(identifier, Box::from(expression)),
+                    self.current,
+                ))
+            }
+            Err(e) => Err(e),
+        }
     }
 }

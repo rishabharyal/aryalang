@@ -1,32 +1,28 @@
-use crate::core::parser::let_statement_handler::LetStatementHandler;
+use crate::core::parser::ast::Statement;
 use crate::core::token::Token;
 
-pub struct Parser {
-    pub tokens: Vec<Token>,
-    current: usize,
+pub struct Parser<'a> {
+    pub tokens: &'a [Token],
 }
 
-impl Parser {
-    pub fn new(tokens: Vec<Token>) -> Self {
-        Parser { tokens, current: 0 }
+#[derive(Debug, Clone)]
+pub enum ParseError {
+    UnexpectedToken { expected: String, found: String },
+    // Add more detailed error types if necessary
+}
+
+impl<'a> Parser<'a> {
+    pub fn new(tokens: &'a [Token]) -> Self {
+        Parser { tokens }
     }
 
-    pub fn parse(&mut self) {
-        let mut nodes = Vec::new();
+    pub fn parse(&mut self) -> Result<Vec<Statement>, ParseError> {
+        let mut statement_handler =
+            crate::core::parser::statements_handler::StatementsHandler::new(&self.tokens[0..]);
 
-        while self.current < self.tokens.len() {
-            // Check if the current token indicates a 'let' statement
-            if let Some(token) = self.tokens.get(self.current) {
-                if token.token_type == "LET" {
-                    let handler = LetStatementHandler::new(&self.tokens[self.current..]);
-                    let (node, consumed) = handler.parse();
-                    nodes.push(node);
-                    self.current += consumed;
-                } else {
-                    // Handle other statement types or advance
-                    self.current += 1;
-                }
-            }
+        match statement_handler.handle() {
+            Ok((statements, _)) => Ok(statements),
+            Err(e) => Err(e),
         }
     }
 }
