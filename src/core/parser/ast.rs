@@ -26,4 +26,5 @@ pub enum Op {
     Divide,
     LessThanEqualTo,
     Equals,
+    Assign,
 }

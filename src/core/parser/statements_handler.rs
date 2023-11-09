@@ -8,11 +8,16 @@ use crate::core::token::Token;
 pub struct StatementsHandler<'a> {
     pub tokens: &'a [Token],
     current: usize,
+    is_inside_brances: bool,
 }
 
 impl<'a> StatementsHandler<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
-        StatementsHandler { tokens, current: 0}
+        StatementsHandler { tokens, current: 0, is_inside_brances: false}
+    }
+
+    pub fn set_blocked(&mut self) {
+        self.is_inside_brances = true;
     }
 
     pub fn handle(&mut self) -> Result<(Vec<Statement>, usize), ParseError> {
@@ -40,7 +45,6 @@ impl<'a> StatementsHandler<'a> {
                         }
                         Err(e) => return Err(e),
                     }
-                    print!("{:?}", nodes);
                 }
 
                 // Need to handle identifier.
@@ -56,13 +60,11 @@ impl<'a> StatementsHandler<'a> {
                     }
                 }
 
-                print!("{:?}", token.token_type);
+                if token.token_type == "RBRACE" {
+                    break;
+                }
             }
-           self.current +=1;
         }
-
-        // Print nodes
-        println!("{:?}", nodes);
 
         Ok((nodes, self.current))
     }

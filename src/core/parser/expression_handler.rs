@@ -29,7 +29,7 @@ impl<'a> ExpressionHandler<'a> {
     pub fn expression(&mut self) -> Result<(Expression, usize), ParseError> {
         // Handle term
         let mut left = self.handle_term()?;
-        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "EQ" {
+        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "ASSIGN" || self.peek().token_type == "EQ" {
             let operation = self.peek().token_type.clone();
             self.move_ahead();
             let right = self.handle_term()?;
@@ -40,12 +40,17 @@ impl<'a> ExpressionHandler<'a> {
             if operation == "LT_EQ" {
                 op = Op::LessThanEqualTo;
             }
+            if operation == "ASSIGN" {
+                op = Op::Assign;
+            }
             if operation == "EQ" {
                 op = Op::Equals;
             }
             left = Expression::BinOp(Box::new(left), op, Box::new(right));
         }
-
+        if self.peek().token_type == "SEMICOLON" {
+            self.move_ahead();
+        }
         Ok((left, self.current))
     }
 

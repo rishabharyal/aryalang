@@ -20,8 +20,6 @@ impl<'a> Parser<'a> {
         let mut statement_handler =
             crate::core::parser::statements_handler::StatementsHandler::new(&self.tokens[0..]);
 
-        print!("{:?}", "hello");
-
         match statement_handler.handle() {
             Ok((statements, _)) => Ok(statements),
             Err(e) => Err(e),
