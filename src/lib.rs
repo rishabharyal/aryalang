@@ -12,6 +12,7 @@ impl Aryalang {
         let lexer = core::Lexer::new(&self.input);
         let tokens = lexer.tokenize();
         let mut parser = core::Parser::new(&tokens);
-        parser.parse().expect("Parse Error: \n");
+        let result = parser.parse().expect("Parse Error: \n");
+        print!("{:?}", result);
     }
 }

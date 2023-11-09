@@ -24,4 +24,6 @@ pub enum Op {
     Subtract,
     Multiply,
     Divide,
+    LessThanEqualTo,
+    Equals,
 }

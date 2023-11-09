@@ -30,7 +30,6 @@ impl<'a> IfStatementHandler<'a> {
         // Because the default value for current = 1, we can directly start processing the
         // expression.
 
-
         // The second token must be an expression. So, delegate that to the ExpressionHandler.
         let mut expression_parser = ExpressionHandler::new(&self.start_token[self.current..]);
         let (expression, cursor) = expression_parser.expression()?;
@@ -58,7 +57,7 @@ impl<'a> IfStatementHandler<'a> {
             Err(e) => return Err(e),
         };
 
-        self.current += cursor; // Not sure if we need this.
+        //self.current += cursor; // Not sure if we need this.
         
         // Now that we have list of statements, we need to check if the right curly brace has been
         // closed successfully.

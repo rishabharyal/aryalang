@@ -1,5 +1,6 @@
 use crate::core::parser::ast::Statement;
 use crate::core::parser::definition::ParseError;
+use crate::core::parser::expression_handler::ExpressionHandler;
 use crate::core::parser::if_statement_handler::IfStatementHandler;
 use crate::core::parser::let_statement_handler::LetStatementHandler;
 use crate::core::token::Token;
@@ -39,8 +40,25 @@ impl<'a> StatementsHandler<'a> {
                         }
                         Err(e) => return Err(e),
                     }
+                    print!("{:?}", nodes);
                 }
+
+                // Need to handle identifier.
+                if token.token_type == "IDENTIFIER" {
+                    let mut handler = ExpressionHandler::new(&self.tokens[self.current..]);
+                    match handler.expression() {
+                        Ok((expr, consumed)) => {
+                            // Make sure a Statement node is pushed.
+                            nodes.push(Statement::Assignment(token.literal.clone(), Box::new(expr)));
+                            self.current += consumed;
+                        }
+                        Err(e) => return Err(e),
+                    }
+                }
+
+                print!("{:?}", token.token_type);
             }
+           self.current +=1;
         }
 
         // Print nodes

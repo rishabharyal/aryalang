@@ -29,13 +29,19 @@ impl<'a> ExpressionHandler<'a> {
     pub fn expression(&mut self) -> Result<(Expression, usize), ParseError> {
         // Handle term
         let mut left = self.handle_term()?;
-        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" {
+        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "EQ" {
             let operation = self.peek().token_type.clone();
             self.move_ahead();
             let right = self.handle_term()?;
             let mut op = Op::Add;
             if operation == "MINUS" {
                 op = Op::Subtract;
+            }
+            if operation == "LT_EQ" {
+                op = Op::LessThanEqualTo;
+            }
+            if operation == "EQ" {
+                op = Op::Equals;
             }
             left = Expression::BinOp(Box::new(left), op, Box::new(right));
         }
@@ -64,6 +70,8 @@ impl<'a> ExpressionHandler<'a> {
             let right = self.handle_factor()?;
             left = Expression::BinOp(Box::new(left), Op::Multiply, Box::new(right));
         }
+
+
 
         Ok(left)
     }
@@ -94,8 +102,10 @@ impl<'a> ExpressionHandler<'a> {
             let (expression, _) = self.expression()?;
             left_token_type = self.peek().token_type.clone();
             return if left_token_type == *"RPAREN" {
+                self.move_ahead();
                 Ok(expression)
             } else {
+                // We need to see if there are any other signs...
                 Err(ParseError::UnexpectedToken {
                     expected: String::from("RPAREN"),
                     found: left_token_type,
@@ -111,6 +121,12 @@ impl<'a> ExpressionHandler<'a> {
         }
 
         // Handle identifier and function calls
+        if left_token_type == *"IDENTIFIER" {
+            let s = self.peek().literal.clone();
+            self.move_ahead();
+            return Ok(Expression::Identifier(s))
+        }
+
 
         Err(ParseError::UnexpectedToken {
             expected: String::from("NUMBER, LPAREN"),
