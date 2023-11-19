@@ -27,4 +27,5 @@ pub enum Op {
     LessThanEqualTo,
     Equals,
     Assign,
+    GreaterThanEqualTo,
 }

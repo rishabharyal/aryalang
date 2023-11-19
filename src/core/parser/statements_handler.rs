@@ -61,7 +61,10 @@ impl<'a> StatementsHandler<'a> {
                 }
 
                 if token.token_type == "RBRACE" {
-                    break;
+                    if self.is_inside_brances {
+                        break;
+                    }
+                    return Err(ParseError::UnexpectedToken { expected: "Statement".to_string(), found: token.token_type.to_string() });
                 }
             }
         }

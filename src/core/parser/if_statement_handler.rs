@@ -47,6 +47,7 @@ impl<'a> IfStatementHandler<'a> {
         let mut parser = crate::core::parser::statements_handler::StatementsHandler::new(
             &self.start_token[self.current..],
         );
+        parser.set_blocked();
         let statements = parser.handle();
 
         let statements = match statements {

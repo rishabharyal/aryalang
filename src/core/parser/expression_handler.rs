@@ -41,10 +41,12 @@ impl<'a> ExpressionHandler<'a> {
                 op = Op::LessThanEqualTo;
             }
             if operation == "ASSIGN" {
-                op = Op::Assign;
-            }
+                op = Op::Assign; }
             if operation == "EQ" {
                 op = Op::Equals;
+            }
+            if operation == "GT_EQ" {
+                op = Op::GreaterThanEqualTo;
             }
             left = Expression::BinOp(Box::new(left), op, Box::new(right));
         }
