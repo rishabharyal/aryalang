@@ -1,18 +1,21 @@
-pub struct Analyzer {
-}
+use crate::core::parser::ast::Statement;
 
-// Scope table
-// general variable table just to check if variable exists or not. Maybe not?
+pub struct Analyzer {
+    pub statements: Vec<Statement>
+}
 
 #[derive(Debug, Clone)]
 pub enum AnalysisError {
     UndefinedVariable { expected: String, found: String },
-    // Add more detailed error types if necessary
+    UndefinedFunction { expected: String, found: String },
+    UndefinedType { expected: String, found: String },
 }
 
 impl Analyzer {
-    pub fn new() -> Self {
-       Analyzer { }
+    pub fn new(statements: Vec<Statement>) -> Self {
+       Analyzer {
+            statements
+        }
     }
 
     pub fn parse(&mut self) -> bool {
