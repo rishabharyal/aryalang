@@ -19,6 +19,41 @@ impl Analyzer {
     }
 
     pub fn parse(&mut self) -> bool {
+        // loop through the statements and start executing them
+        // Print all the statements
+        for statement in &self.statements {
+            match statement {
+                Statement::Let(var_name, expression) => {
+                    // Handle Let variant
+                    // `var_name` is a &String and `expression` is a &Box<Expression>
+                },
+                Statement::Assignment(var_name, expression) => {
+                    // Handle Assignment varian
+                    // `var_name` is a &String and `expression` is a &Box<Expression>
+                },
+                Statement::ExpressionStatement(expression) => {
+                    // Handle ExpressionStatement variant
+                    // `expression` is a &Box<Expression>
+                },
+                Statement::IfStatement(condition, statements) => {
+                    // Handle IfStatement variant
+                    // `condition` is a &Box<Expression> and `statements` is a &Vec<Statement>
+                },
+            }
+        }
+
         return true;
+        // We will parse and execute
+
     }
+}
+
+fn PrintString(str: String) {
+    // Print the string
+    print!("{}", str);
+}
+
+fn PrintStringLn(str: String) {
+    // Print the string
+    println!("{}", str);
 }
