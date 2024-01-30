@@ -28,13 +28,7 @@ pub enum VariableType {
 
 impl Analyzer {
     pub fn new(statements: Vec<Statement>) -> Self {
-        let mut variables = HashMap::new();
-        variables.insert("hello".to_string(), Variable {
-            name: "".to_string(),
-            value: "world".to_string(),
-            variable_type: VariableType::String,
-        });
-
+        let variables = HashMap::new();
         Analyzer {
            statements, variables
         }
@@ -45,12 +39,19 @@ impl Analyzer {
         // Print all the statements
         for statement in &self.statements {
             match statement {
-                Statement::Let(var_name, expression) => {
+                Statement::Let(var_name, _expression) => {
                     // check if the variable is already defined
                     // if not, then add it to the variables
                     if self.variables.contains_key(var_name) {
                         return Err(AnalysisError::VariableAlreadyDefined { variable_name: var_name.to_string() });
-                    }    
+                    }
+
+                    // Add the variable to the variables
+                    self.variables.insert(var_name.to_string(), Variable {
+                        name: var_name.to_string(),
+                        value: "".to_string(),
+                        variable_type: VariableType::String,
+                    });
 
                 },
                 Statement::Assignment(var_name, expression) => {
@@ -66,6 +67,11 @@ impl Analyzer {
                     // `condition` is a &Box<Expression> and `statements` is a &Vec<Statement>
                 },
             }
+        }
+
+        // Print all the variables
+        for (key, value) in &self.variables {
+            println!("LADO::: {}: {:?}", key, value.value);
         }
 
         return Ok(true);

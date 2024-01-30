@@ -19,13 +19,21 @@ impl Aryalang {
         }
 
         let mut seman_analyzer = core::Analyzer::new(result);
-        let result_boolean = seman_analyzer.parse();
-
-        if result_boolean == false {
-            print!("{:?}", "^^ Please see error above.");
-            return
+        let result_option = seman_analyzer.parse(); // returns Result<bool, error>
+        match result_option {
+            Ok(value) => {
+                if value {
+                    // Print all ok
+                    println!("All ok!")
+                }
+            },
+            Err(_e) => {
+                // Handle the error case, e.g., log the error, return from function, etc.
+                // You can use _e to access the error if needed
+                println!("Error: {:?}", _e);
+            },
         }
 
-        print!("{:?} {:?}", result_boolean, "fyck this sghit.......................");
+
     }
 }

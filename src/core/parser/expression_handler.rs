@@ -48,7 +48,7 @@ impl<'a> ExpressionHandler<'a> {
             if operation == "GT_EQ" {
                 op = Op::GreaterThanEqualTo;
             }
-            left = Expression::BinOp(Box::new(left), op, Box::new(right));
+            left = Expression::BinOp(Box::new(left), op, Box::new(right), None);
         }
         if self.peek().token_type == "SEMICOLON" {
             self.move_ahead();
@@ -66,7 +66,7 @@ impl<'a> ExpressionHandler<'a> {
             if operation == "SLASH" {
                 op = Op::Divide;
             }
-            left = Expression::BinOp(Box::new(left), op, Box::new(right));
+            left = Expression::BinOp(Box::new(left), op, Box::new(right), None);
         }
 
         // check if LParen, number or identifier
@@ -75,7 +75,7 @@ impl<'a> ExpressionHandler<'a> {
             || self.peek().token_type == "IDENTIFIER"
         {
             let right = self.handle_factor()?;
-            left = Expression::BinOp(Box::new(left), Op::Multiply, Box::new(right));
+            left = Expression::BinOp(Box::new(left), Op::Multiply, Box::new(right), None);
         }
 
 
@@ -87,7 +87,7 @@ impl<'a> ExpressionHandler<'a> {
         let mut left_token_type = self.peek().token_type.clone();
         //  Handle Number, parenthesis, prefix expression
         if left_token_type == *"NUMBER" {
-            let n = Number(self.peek().literal.clone());
+            let n = Number(self.peek().literal.clone(), None);
             self.move_ahead();
             return Ok(n);
         }
@@ -95,13 +95,13 @@ impl<'a> ExpressionHandler<'a> {
         if left_token_type == *"MINUS" {
             self.move_ahead();
             let expr = self.handle_factor()?;
-            return Ok(Expression::UnaryOp(Op::Subtract, Box::new(expr)));
+            return Ok(Expression::UnaryOp(Op::Subtract, Box::new(expr), None));
         }
 
         if left_token_type == *"PLUS" {
             self.move_ahead();
             let expr = self.handle_factor()?;
-            return Ok(Expression::UnaryOp(Op::Add, Box::new(expr)));
+            return Ok(Expression::UnaryOp(Op::Add, Box::new(expr), None));
         }
 
         if left_token_type == *"LPAREN" {
@@ -124,14 +124,14 @@ impl<'a> ExpressionHandler<'a> {
         if left_token_type == *"STRING" {
             let s = self.peek().literal.clone();
             self.move_ahead();
-            return Ok(Expression::StringLiteral(s));
+            return Ok(Expression::StringLiteral(s, None));
         }
 
         // Handle identifier and function calls
         if left_token_type == *"IDENTIFIER" {
             let s = self.peek().literal.clone();
             self.move_ahead();
-            return Ok(Expression::Identifier(s))
+            return Ok(Expression::Identifier(s, None))
         }
 
 
