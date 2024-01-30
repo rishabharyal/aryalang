@@ -34,8 +34,5 @@ pub enum Op {
 pub enum Type {
     Integer,
     String,
-    Boolean,
     Void,
-    Nil,
-    Unresolved
 }
