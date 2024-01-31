@@ -42,20 +42,23 @@ impl Analyzer {
                     }
 
                     let mut expression_type_evaluator  =  ExpressionTypeEvaluator::new(*expression.clone());
-                    if let Ok(expression_type) = expression_type_evaluator.parse() {
-                        self.variables.insert(var_name.to_string(), Variable {
-                            name: var_name.to_string(),
-                            value: "".to_string(),
-                            variable_type: expression_type,
-                        });
-                    } else {
-                        return Err(AnalysisError::UndefinedVariable { expected: "String".to_string(), found: "Integer".to_string() });
+                    
+                    match expression_type_evaluator.parse() {
+                        Ok(expression_type) => {
+                            self.variables.insert(var_name.to_string(), Variable {
+                                name: var_name.to_string(),
+                                value: "".to_string(),
+                                variable_type: expression_type,
+                            });
+                        },
+                        Err(e) => return Err(e),
                     }
-
                 },
                 Statement::Assignment(var_name, expression) => {
-                    // Handle Assignment varian
-                    // `var_name` is a &String and `expression` is a &Box<Expression>
+                    // check if the variable is already defined
+                    if !self.variables.contains_key(var_name) {
+                        return Err(AnalysisError::UndefinedVariable { expected: var_name.to_string(), found: var_name.to_string() });
+                    }
                 },
                 Statement::ExpressionStatement(expression) => {
                     // Handle ExpressionStatement variant
@@ -79,6 +82,30 @@ impl Analyzer {
     }
 }
 
+pub struct ExpressionResult {
+    pub value: String,
+    pub value_type: Type,
+}
+
+pub struct ExpressionEvaluator {
+    pub expression: Expression 
+}
+
+impl ExpressionEvaluator {
+    pub fn new(expression: Expression) -> Self {
+        ExpressionEvaluator {
+            expression
+        }
+    }
+
+    pub fn parse(&mut self) -> Result<ExpressionResult, AnalysisError> {
+        return Ok(ExpressionResult {
+            value: "".to_string(),
+            value_type: Type::String,
+        });
+    }
+}
+
 pub struct ExpressionTypeEvaluator {
     pub expression: Expression 
 }
@@ -91,6 +118,68 @@ impl ExpressionTypeEvaluator {
     }
 
     pub fn parse(&mut self) -> Result<Type, AnalysisError> {
-        return Ok(Type::String);
+        match &self.expression {
+            Expression::StringLiteral(_value, _type) => {
+                return Ok(Type::String);
+            },
+            Expression::Number(_value, _type) => {
+                return Ok(Type::Integer);
+            },
+            Expression::BinOp(_, _, _, _)=> {
+               return Ok(Type::Integer);
+            },
+            Expression::Identifier(_, _) => {
+                return Ok(Type::String);
+            },
+            Expression::FunctionCall(_, _, _) => {
+                return Ok(Type::String);
+            },
+            Expression::UnaryOp(_, _, _)=> {
+                return Ok(Type::Integer);
+            }
+        }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
