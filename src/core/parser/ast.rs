@@ -1,5 +1,8 @@
-// ignore dead code
 #![allow(dead_code)]
+
+use std::fmt;
+
+// ignore dead code
 #[derive(Debug, PartialEq, Clone)]
 pub enum Statement {
     Let(String, Box<Expression>),         // Represents "let x = 5;"
@@ -35,4 +38,14 @@ pub enum Type {
     Integer,
     String,
     Void,
+}
+
+impl fmt::Display for Type {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Type::Integer => write!(f, "Integer"),
+            Type::String => write!(f, "String"),
+            Type::Void => write!(f, "Void"),
+        }
+    }
 }
