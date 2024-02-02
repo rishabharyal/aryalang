@@ -35,7 +35,7 @@ fn loadNativeFunctions() -> HashMap<String, NativeFunctionDefination> {
         name: "print".to_string(),
         parameters_types: vec![Type::String],
         return_type: Type::String
-    });
+   });
 
     native_functions.insert("println".to_string(), NativeFunctionDefination {
         name: "println".to_string(),
@@ -49,20 +49,20 @@ fn loadNativeFunctions() -> HashMap<String, NativeFunctionDefination> {
         return_type: Type::String
     });
 
-    native_functions.insert("int".to_string(), NativeFunctionDefination {
+    native_functions.insert("strtoint".to_string(), NativeFunctionDefination {
         name: "int".to_string(),
         parameters_types: vec![Type::String],
         return_type: Type::Integer
     });
 
 
-    native_functions.insert("str".to_string(), NativeFunctionDefination {
+    native_functions.insert("inttostr".to_string(), NativeFunctionDefination {
         name: "str".to_string(),
         parameters_types: vec![Type::String],
         return_type: Type::String
     });
 
-    native_functions.insert("len".to_string(), NativeFunctionDefination {
+    native_functions.insert("strlen".to_string(), NativeFunctionDefination {
         name: "len".to_string(),
         parameters_types: vec![Type::String],
         return_type: Type::Integer
