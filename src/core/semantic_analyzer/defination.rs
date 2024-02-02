@@ -12,7 +12,6 @@ pub struct Analyzer {
 pub enum AnalysisError {
     UndefinedVariable { expected: String },
     UndefinedFunction { expected: String, found: String },
-    UndefinedType { expected: String, found: String },
     VariableAlreadyDefined  { variable_name: String },
     IllegalOperation { expected: String, found: String, operation:  Op},
 }
@@ -29,7 +28,7 @@ pub struct NativeFunctionDefination {
     pub return_type: Type
 }
 
-fn loadNativeFunctions() -> HashMap<String, NativeFunctionDefination> {
+fn load_native_functions() -> HashMap<String, NativeFunctionDefination> {
     let mut native_functions = HashMap::new();
     native_functions.insert("print".to_string(), NativeFunctionDefination {
         name: "print".to_string(),
@@ -50,20 +49,20 @@ fn loadNativeFunctions() -> HashMap<String, NativeFunctionDefination> {
     });
 
     native_functions.insert("strtoint".to_string(), NativeFunctionDefination {
-        name: "int".to_string(),
+        name: "strtoint".to_string(),
         parameters_types: vec![Type::String],
         return_type: Type::Integer
     });
 
 
     native_functions.insert("inttostr".to_string(), NativeFunctionDefination {
-        name: "str".to_string(),
+        name: "inttostr".to_string(),
         parameters_types: vec![Type::String],
         return_type: Type::String
     });
 
     native_functions.insert("strlen".to_string(), NativeFunctionDefination {
-        name: "len".to_string(),
+        name: "strlen".to_string(),
         parameters_types: vec![Type::String],
         return_type: Type::Integer
     });
@@ -91,6 +90,7 @@ impl Analyzer {
         // loop through the statements and start executing them
         // Print all the statements
         for statement in &self.statements {
+            // print the statement
             match statement {
                 Statement::Let(var_name, expression) => {
                     // check if the variable is already defined
@@ -117,7 +117,7 @@ impl Analyzer {
                         Err(e) => return Err(e),
                     }
                 },
-                Statement::Assignment(var_name, expression) => {
+                Statement::Assignment(var_name, _expression) => {
                     // check if the variable is already defined
                     let variables_guard = self.variables.lock().unwrap();
                     if !variables_guard.contains_key(var_name) {
@@ -126,10 +126,15 @@ impl Analyzer {
                     }
                 },
                 Statement::ExpressionStatement(expression) => {
-                    // Handle ExpressionStatement variant
-                    // `expression` is a &Box<Expression>
+                    let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*expression.clone(), self.variables.clone());
+                    match expression_type_evaluator.parse() {
+                        Ok(_expression_type) => {
+                            // Do nothing
+                        },
+                        Err(e) => return Err(e),
+                    }
                 },
-                Statement::IfStatement(condition, statements) => {
+                Statement::IfStatement(_condition, _statements) => {
                     // Handle IfStatement variant
                     // `condition` is a &Box<Expression> and `statements` is a &Vec<Statement>
                 },
@@ -146,30 +151,6 @@ impl Analyzer {
         return Ok(true);
         // We will parse and execute
 
-    }
-}
-
-pub struct ExpressionResult {
-    pub value: String,
-    pub value_type: Type,
-}
-
-pub struct ExpressionEvaluator {
-    pub expression: Expression 
-}
-
-impl ExpressionEvaluator {
-    pub fn new(expression: Expression) -> Self {
-        ExpressionEvaluator {
-            expression
-        }
-    }
-
-    pub fn parse(&mut self) -> Result<ExpressionResult, AnalysisError> {
-        return Ok(ExpressionResult {
-            value: "".to_string(),
-            value_type: Type::String,
-        });
     }
 }
 
@@ -209,7 +190,7 @@ impl ExpressionTypeEvaluator {
                                             return Ok(first_expression_type);
                                         }
 
-                                        return Err(AnalysisError::UndefinedType { expected: first_expression_type.to_string(), found: second_expression_type.to_string() });
+                                        return Err(AnalysisError::IllegalOperation{ expected: first_expression_type.to_string(), found: second_expression_type.to_string(), operation: Op::Add });
                                     },
                                     Op::Subtract => {
                                         // Only ok if both of them are integers
@@ -292,8 +273,15 @@ impl ExpressionTypeEvaluator {
                 return Ok(var_type);
 
             },
-            Expression::FunctionCall(_, _, _) => {
-                return Ok(Type::String);
+            Expression::FunctionCall(function_name,_, _) => {
+                let native_functions = load_native_functions();
+                if native_functions.contains_key(function_name) {
+                    let native_function = native_functions.get(function_name).unwrap();
+                    let return_type = native_function.return_type.clone();
+                    return Ok(return_type);
+                }
+
+                return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
             },
             Expression::UnaryOp(_, expr, _)=> {
                 let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*expr.clone(), self.variables.clone());
