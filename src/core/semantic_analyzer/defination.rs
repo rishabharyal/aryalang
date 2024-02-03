@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use crate::core::parser::ast::{Expression, Statement, Type, Op};
 use std::sync::{Arc, Mutex};
@@ -295,46 +295,3 @@ impl ExpressionTypeEvaluator {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
