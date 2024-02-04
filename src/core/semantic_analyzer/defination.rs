@@ -222,7 +222,7 @@ impl ExpressionTypeEvaluator {
                                     Op::LessThanEqualTo => {
                                         // Only ok if both of them are integers
                                         if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Integer);
+                                            return Ok(Type::Boolean);
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::LessThanEqualTo });
@@ -230,7 +230,7 @@ impl ExpressionTypeEvaluator {
                                     Op::Equals => {
                                         // Only ok if both of them are integers
                                         if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Integer);
+                                            return Ok(Type::Boolean);
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::Equals });
@@ -246,7 +246,7 @@ impl ExpressionTypeEvaluator {
                                     Op::GreaterThanEqualTo => {
                                         // Only ok if both of them are integers
                                         if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Integer);
+                                            return Ok(Type::Boolean);
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::GreaterThanEqualTo });

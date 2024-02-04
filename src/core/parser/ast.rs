@@ -38,6 +38,7 @@ pub enum Type {
     Integer,
     String,
     Void,
+    Boolean,
 }
 
 impl fmt::Display for Type {
@@ -46,6 +47,7 @@ impl fmt::Display for Type {
             Type::Integer => write!(f, "Integer"),
             Type::String => write!(f, "String"),
             Type::Void => write!(f, "Void"),
+            Type::Boolean => write!(f, "Boolean"),
         }
     }
 }
