@@ -14,6 +14,7 @@ pub enum AnalysisError {
     UndefinedFunction { expected: String, found: String },
     VariableAlreadyDefined  { variable_name: String },
     IllegalOperation { expected: String, found: String, operation:  Op},
+    NonBooleanCondition { expected: String, found: String },
 }
 
 pub struct Variable {
@@ -109,8 +110,8 @@ impl Analyzer {
                             let mut variables_guard = self.variables.lock().unwrap();
                             variables_guard.insert(var_name.to_string(), Variable {
                                 name: var_name.to_string(),
-                                value: "".to_string(),
-                                variable_type: expression_type,
+                                value: expression_type.value.to_string(),
+                                variable_type: expression_type.expression_type,
                             });
                             drop(variables_guard);
                         },
@@ -124,6 +125,18 @@ impl Analyzer {
                         drop(variables_guard);
                         return Err(AnalysisError::UndefinedVariable { expected: var_name.to_string() });
                     }
+
+                    drop(variables_guard);
+                    let mut expression_type_evaluator = ExpressionTypeEvaluator::new(*_expression.clone(), self.variables.clone());
+                    match expression_type_evaluator.parse() {
+                        Ok(expression_type) => {
+                            let mut variables_guard = self.variables.lock().unwrap();
+                            let variable = variables_guard.get_mut(var_name).unwrap();
+                            variable.value = expression_type.value.to_string();
+                            drop(variables_guard);
+                        },
+                        Err(e) => return Err(e),
+                    }
                 },
                 Statement::ExpressionStatement(expression) => {
                     let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*expression.clone(), self.variables.clone());
@@ -134,7 +147,16 @@ impl Analyzer {
                         Err(e) => return Err(e),
                     }
                 },
-                Statement::IfStatement(_condition, _statements) => {
+                Statement::IfStatement(condition, _statements) => {
+                    let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*condition.clone(), self.variables.clone());
+                    match expression_type_evaluator.parse() {
+                        Ok(expression_type) => {
+                            if expression_type.expression_type != Type::Bool {
+                                return Err(AnalysisError::NonBooleanCondition { expected: "Boolean".to_string(), found: expression_type.expression_type.to_string() });
+                            }
+                        },
+                        Err(e) => return Err(e),
+                    }
                     // Handle IfStatement variant
                     // `condition` is a &Box<Expression> and `statements` is a &Vec<Statement>
                 },
@@ -154,7 +176,12 @@ impl Analyzer {
     }
 }
 
-pub struct ExpressionTypeEvaluator {
+struct ExpressionResult {
+    value: String,
+    expression_type: Type
+}
+
+struct ExpressionTypeEvaluator {
     pub expression: Expression,
     variables: Arc<Mutex<HashMap<String, Variable>>>
 }
@@ -167,13 +194,23 @@ impl ExpressionTypeEvaluator {
         }
     }
 
-    pub fn parse(&mut self) -> Result<Type, AnalysisError> {
+    fn parse(&mut self) -> Result<ExpressionResult, AnalysisError> {
         match &self.expression {
-            Expression::StringLiteral(_value, _type) => {
-                return Ok(Type::String);
+            Expression::StringLiteral(value, _type) => {
+                return Ok(
+                    ExpressionResult {
+                        value: value.to_string(),
+                        expression_type: Type::String
+                    }
+                );
             },
-            Expression::Number(_value, _type) => {
-                return Ok(Type::Integer);
+            Expression::Number(value, _type) => {
+                return Ok(
+                    ExpressionResult {
+                        value: value.to_string(),
+                        expression_type: Type::Integer
+                    }
+                );
             },
             Expression::BinOp(first_expression, operator, second_expression, _)=> {
                 let mut first_expression_type_evaluator  =  ExpressionTypeEvaluator::new(*first_expression.clone(), self.variables.clone());
@@ -186,16 +223,34 @@ impl ExpressionTypeEvaluator {
                                 match operator {
                                     Op::Add => {
                                         // As long as they match, simply return
-                                        if first_expression_type == second_expression_type {
-                                            return Ok(first_expression_type);
+                                        if first_expression_type.expression_type == second_expression_type.expression_type {
+                                            // if they are both strings, then concatenate them
+                                            if first_expression_type.expression_type == Type::String {
+                                                let result = first_expression_type.value.to_string() + &second_expression_type.value.to_string();
+                                                return Ok(ExpressionResult {
+                                                    value: result,
+                                                    expression_type: Type::String
+                                                });
+                                            }
+
+                                            // if they are both integers, then add them
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() + second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Integer
+                                            });
                                         }
 
-                                        return Err(AnalysisError::IllegalOperation{ expected: first_expression_type.to_string(), found: second_expression_type.to_string(), operation: Op::Add });
+                                        return Err(AnalysisError::IllegalOperation{ expected: first_expression_type.expression_type.to_string(), found: second_expression_type.expression_type.to_string(), operation: Op::Add });
                                     },
                                     Op::Subtract => {
                                         // Only ok if both of them are integers
-                                        if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Integer);
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() - second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Integer
+                                            });
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::Subtract });
@@ -203,8 +258,13 @@ impl ExpressionTypeEvaluator {
                                     },
                                     Op::Multiply => {
                                         // Only ok if both of them are integers
-                                        if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Integer);
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            println!("f {} s {}", first_expression_type.value, second_expression_type.value); 
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() * second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Integer
+                                            });
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::Multiply });
@@ -212,8 +272,12 @@ impl ExpressionTypeEvaluator {
                                     },
                                     Op::Divide => {
                                         // Only ok if both of them are integers
-                                        if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Integer);
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() / second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Integer
+                                            });
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::Divide });
@@ -221,32 +285,68 @@ impl ExpressionTypeEvaluator {
                                     },
                                     Op::LessThanEqualTo => {
                                         // Only ok if both of them are integers
-                                        if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Boolean);
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() <= second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Bool
+                                            });
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::LessThanEqualTo });
                                     },
                                     Op::Equals => {
                                         // Only ok if both of them are integers
-                                        if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Boolean);
+                                        println!("f {} s {}", first_expression_type.value, second_expression_type.value);
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() == second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Bool
+                                            });
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::Equals });
                                     },
                                     Op::Assign => {
-                                        // Only ok if both of them are integers
-                                        if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Integer);
-                                        }
 
-                                        return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::Assign });
+                                        // match to drr if its an Identifier
+                                        match *first_expression.clone() {
+                                            Expression::Identifier(identifier_name, _) => {
+                                                let mut variables_guard = self.variables.lock().unwrap();
+                                                if !variables_guard.contains_key(&identifier_name) {
+                                                    drop(variables_guard);
+                                                    return Err(AnalysisError::UndefinedVariable { expected: identifier_name.to_string() });
+                                                }
+
+                                                // get the variable and return the type
+                                                let variable = variables_guard.get(&identifier_name).unwrap();
+                                                let var_type = variable.variable_type.clone();
+                                                if var_type != second_expression_type.expression_type {
+                                                    drop(variables_guard);
+                                                    return Err(AnalysisError::IllegalOperation { expected: var_type.to_string(), found: second_expression_type.expression_type.to_string(), operation: Op::Assign });
+                                                }
+
+                                                // Update the value of the variable involved in first expression
+                                                let variable = variables_guard.get_mut(&first_expression_type.value).unwrap();
+                                                variable.value = second_expression_type.value.to_string();
+                                                drop(variables_guard);
+                                                return Ok(first_expression_type);
+
+                                            },
+                                            _ => {
+                                                return Err(AnalysisError::IllegalOperation { expected: "Identifier".to_string(), found: "Not Identifier".to_string(), operation: Op::Assign });
+                                            }
+                                        }
                                     },
                                     Op::GreaterThanEqualTo => {
                                         // Only ok if both of them are integers
-                                        if first_expression_type == Type::Integer && second_expression_type == Type::Integer {
-                                            return Ok(Type::Boolean);
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() >= second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Bool
+                                            });
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::GreaterThanEqualTo });
@@ -269,8 +369,14 @@ impl ExpressionTypeEvaluator {
                 // get the variable and return the type
                 let variable = variables_guard.get(identifier_name).unwrap();
                 let var_type = variable.variable_type.clone();
+                let var_value = variable.value.clone();
                 drop(variables_guard);
-                return Ok(var_type);
+                return Ok(
+                    ExpressionResult {
+                        value: var_value,
+                        expression_type: var_type
+                    }
+                );
 
             },
             Expression::FunctionCall(function_name,_, _) => {
@@ -278,16 +384,36 @@ impl ExpressionTypeEvaluator {
                 if native_functions.contains_key(function_name) {
                     let native_function = native_functions.get(function_name).unwrap();
                     let return_type = native_function.return_type.clone();
-                    return Ok(return_type);
+                    return Ok(
+                        ExpressionResult {
+                            value: "".to_string(),
+                            expression_type: return_type
+                        }
+                    );
                 }
 
                 return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
             },
-            Expression::UnaryOp(_, expr, _)=> {
+            Expression::UnaryOp(operator, expr, _)=> {
                 let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*expr.clone(), self.variables.clone());
                 match expression_type_evaluator.parse() {
                     Ok(expression_type) => {
-                        return Ok(expression_type);
+                        match operator {
+                            Op::Subtract => {
+                                if expression_type.expression_type == Type::Integer {
+                                    let result = -1 * expression_type.value.parse::<i32>().unwrap();
+                                    return Ok(ExpressionResult {
+                                        value: result.to_string(),
+                                        expression_type: Type::Integer
+                                    });
+                                }
+
+                                return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::Subtract });
+                            },
+                            _ => {
+                                return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: operator.clone() });
+                            }
+                        }
                     },
                     Err(e) => return Err(e),
                 }

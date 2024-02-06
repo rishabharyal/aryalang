@@ -38,7 +38,7 @@ pub enum Type {
     Integer,
     String,
     Void,
-    Boolean,
+    Bool,
 }
 
 impl fmt::Display for Type {
@@ -46,8 +46,9 @@ impl fmt::Display for Type {
         match self {
             Type::Integer => write!(f, "Integer"),
             Type::String => write!(f, "String"),
+            Type::Bool => write!(f, "Bool"),
             Type::Void => write!(f, "Void"),
-            Type::Boolean => write!(f, "Boolean"),
         }
     }
 }
+
