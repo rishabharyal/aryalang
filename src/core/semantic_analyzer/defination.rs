@@ -216,6 +216,14 @@ impl ExpressionTypeEvaluator {
                     }
                 );
             },
+            Expression::Boolean(value, _type) => {
+                return Ok(
+                    ExpressionResult {
+                        value: value.to_string(),
+                        expression_type: Type::Bool
+                    }
+                );
+            },
             Expression::BinOp(first_expression, operator, second_expression, _)=> {
                 let mut first_expression_type_evaluator  =  ExpressionTypeEvaluator::new(*first_expression.clone(), self.variables.clone());
                 let mut second_expression_type_evaluator  =  ExpressionTypeEvaluator::new(*second_expression.clone(), self.variables.clone());

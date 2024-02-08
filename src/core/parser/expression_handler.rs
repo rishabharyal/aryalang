@@ -133,6 +133,11 @@ impl<'a> ExpressionHandler<'a> {
             return Ok(Expression::Identifier(s, None))
         }
 
+        if left_token_type == *"TRUE" {
+            self.move_ahead();
+            return Ok(Expression::Boolean(true, None));
+        }
+
 
         Err(ParseError::UnexpectedToken {
             expected: String::from("NUMBER, LPAREN"),

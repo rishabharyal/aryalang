@@ -3,7 +3,7 @@ use aryalang::Aryalang;
 fn main() {
     let mut al = Aryalang::new(
         r#"
-if (5==5) {
+if (true) {
 
 let xxx = 10;	
 }

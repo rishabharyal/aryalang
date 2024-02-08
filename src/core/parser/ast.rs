@@ -19,6 +19,7 @@ pub enum Expression {
     StringLiteral(String, Option<Type>),
     FunctionCall(String, Vec<Expression>, Option<Type>),
     UnaryOp(Op, Box<Expression>, Option<Type>),
+    Boolean(bool, Option<Type>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
