@@ -12,6 +12,7 @@ pub struct Analyzer {
 pub enum AnalysisError {
     UndefinedVariable { expected: String },
     UndefinedFunction { expected: String, found: String },
+    ArgumentCountMismatch { expected: String, found: String },
     VariableAlreadyDefined  { variable_name: String },
     IllegalOperation { expected: String, found: String, operation:  Op},
     NonBooleanCondition { expected: String, found: String },
@@ -23,60 +24,6 @@ pub struct Variable {
     pub variable_type: Type,
 }
 
-pub struct NativeFunctionDefination {
-    pub name: String,
-    pub parameters_types: Vec<Type>,
-    pub return_type: Type
-}
-
-fn load_native_functions() -> HashMap<String, NativeFunctionDefination> {
-    let mut native_functions = HashMap::new();
-    native_functions.insert("print".to_string(), NativeFunctionDefination {
-        name: "print".to_string(),
-        parameters_types: vec![Type::String],
-        return_type: Type::String
-   });
-
-    native_functions.insert("println".to_string(), NativeFunctionDefination {
-        name: "println".to_string(),
-        parameters_types: vec![Type::String],
-        return_type: Type::String
-    });
-
-    native_functions.insert("input".to_string(), NativeFunctionDefination {
-        name: "input".to_string(),
-        parameters_types: vec![],
-        return_type: Type::String
-    });
-
-    native_functions.insert("strtoint".to_string(), NativeFunctionDefination {
-        name: "strtoint".to_string(),
-        parameters_types: vec![Type::String],
-        return_type: Type::Integer
-    });
-
-
-    native_functions.insert("inttostr".to_string(), NativeFunctionDefination {
-        name: "inttostr".to_string(),
-        parameters_types: vec![Type::String],
-        return_type: Type::String
-    });
-
-    native_functions.insert("strlen".to_string(), NativeFunctionDefination {
-        name: "strlen".to_string(),
-        parameters_types: vec![Type::String],
-        return_type: Type::Integer
-    });
-
-    native_functions.insert("exit".to_string(), NativeFunctionDefination {
-        name: "exit".to_string(),
-        parameters_types: vec![Type::Integer],
-        return_type: Type::String
-    });
-
-    native_functions
-
-}
 
 impl Analyzer {
     pub fn new(statements: Vec<Statement>) -> Self {
@@ -390,11 +337,18 @@ impl ExpressionTypeEvaluator {
                 );
 
             },
-            Expression::FunctionCall(function_name,_, _) => {
+            Expression::FunctionCall(function_name, params, _) => {
                 let native_functions = load_native_functions();
                 if native_functions.contains_key(function_name) {
                     let native_function = native_functions.get(function_name).unwrap();
                     let return_type = native_function.return_type.clone();
+                   
+                    if native_function.parameters_types.len() != params.len() {
+                        return Err(AnalysisError::ArgumentCountMismatch { expected: native_function.parameters_types.len().to_string(), found: params.len().to_string() });
+                    }
+
+
+
                     return Ok(
                         ExpressionResult {
                             value: "".to_string(),
@@ -431,4 +385,102 @@ impl ExpressionTypeEvaluator {
             }
         }
     }
+}
+
+pub struct _FunctionExecutor {
+}
+
+impl _FunctionExecutor {
+    pub fn _new() -> Self {
+        _FunctionExecutor {}
+    }
+
+    fn _execute(&mut self, function_name: String, params: Vec<ExpressionResult>) -> Result<ExpressionResult, AnalysisError> {
+        let native_functions = load_native_functions();
+        if native_functions.contains_key(&function_name) {
+            let native_function = native_functions.get(&function_name).unwrap();
+            let return_type = native_function.return_type.clone();
+            if native_function.parameters_types.len() != params.len() {
+                return Err(AnalysisError::ArgumentCountMismatch { expected: native_function.parameters_types.len().to_string(), found: params.len().to_string() });
+            }
+
+            return Ok(
+                ExpressionResult {
+                    value: "".to_string(),
+                    expression_type: return_type
+                }
+            );
+        }
+
+        return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
+    }
+}
+
+pub struct FunctionDefination {
+    pub name: String,
+    pub parameters_types: Vec<Type>,
+    pub return_type: Type,
+    pub module: FunctionModule,
+}
+
+pub enum FunctionModule {
+    IO,
+    Math,
+    String
+}
+
+fn load_native_functions() -> HashMap<String, FunctionDefination> {
+    let mut native_functions = HashMap::new();
+    native_functions.insert("print".to_string(), FunctionDefination {
+        name: "print".to_string(),
+        parameters_types: vec![Type::String],
+        return_type: Type::String,
+        module: FunctionModule::IO
+    });
+
+    native_functions.insert("println".to_string(), FunctionDefination {
+        name: "println".to_string(),
+        parameters_types: vec![Type::String],
+        return_type: Type::String,
+        module: FunctionModule::IO
+    });
+
+    native_functions.insert("input".to_string(), FunctionDefination {
+        name: "input".to_string(),
+        parameters_types: vec![],
+        return_type: Type::String,
+        module: FunctionModule::IO
+    });
+
+    native_functions.insert("strtoint".to_string(), FunctionDefination {
+        name: "strtoint".to_string(),
+        parameters_types: vec![Type::String],
+        return_type: Type::Integer,
+        module: FunctionModule::String
+    });
+
+
+    native_functions.insert("inttostr".to_string(), FunctionDefination {
+        name: "inttostr".to_string(),
+        parameters_types: vec![Type::String],
+        return_type: Type::String,
+        module: FunctionModule::Math
+    });
+
+    native_functions.insert("strlen".to_string(), FunctionDefination {
+        name: "strlen".to_string(),
+        parameters_types: vec![Type::String],
+        return_type: Type::Integer,
+        module: FunctionModule::String
+    });
+
+    native_functions.insert("exit".to_string(), FunctionDefination {
+        name: "exit".to_string(),
+        parameters_types: vec![Type::Integer],
+        return_type: Type::String,
+        module: FunctionModule::IO
+    });
+
+    native_functions
+
 }

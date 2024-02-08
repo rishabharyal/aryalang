@@ -130,6 +130,19 @@ impl<'a> ExpressionHandler<'a> {
         if left_token_type == *"IDENTIFIER" {
             let s = self.peek().literal.clone();
             self.move_ahead();
+            if self.peek().token_type == "LPAREN" {
+                self.move_ahead();
+                let mut args = Vec::new();
+                while self.peek().token_type != "RPAREN" {
+                    let (expression, _) = self.expression()?;
+                    args.push(expression);
+                    if self.peek().token_type == "COMMA" {
+                        self.move_ahead();
+                    }
+                }
+                self.move_ahead();
+                return Ok(Expression::FunctionCall(s, args, None));
+            }
             return Ok(Expression::Identifier(s, None))
         }
 
