@@ -29,11 +29,12 @@ impl<'a> IfStatementHandler<'a> {
     pub fn parse(mut self) -> Result<(Statement, usize), ParseError> {
         // Because the default value for current = 1, we can directly start processing the
         // expression.
-
+        //
         // The second token must be an expression. So, delegate that to the ExpressionHandler.
         let mut expression_parser = ExpressionHandler::new(&self.start_token[self.current..]);
         let (expression, cursor) = expression_parser.expression()?;
         self.current += cursor;
+
 
         // The next token must be a left parenthesis
         if self.peek().token_type == "LBRACE" {
@@ -47,6 +48,7 @@ impl<'a> IfStatementHandler<'a> {
         let mut parser = crate::core::parser::statements_handler::StatementsHandler::new(
             &self.start_token[self.current..],
         );
+
         parser.set_blocked();
         let statements = parser.handle();
 

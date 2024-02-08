@@ -27,9 +27,11 @@ impl<'a> ExpressionHandler<'a> {
     }
 
     pub fn expression(&mut self) -> Result<(Expression, usize), ParseError> {
+        // print tokens
+
         // Handle term
         let mut left = self.handle_term()?;
-        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "ASSIGN" || self.peek().token_type == "EQ" {
+        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "ASSIGN" || self.peek().token_type == "EQ" || self.peek().token_type == "GT_EQ" {
             let operation = self.peek().token_type.clone();
             self.move_ahead();
             let right = self.handle_term()?;
@@ -71,13 +73,10 @@ impl<'a> ExpressionHandler<'a> {
 
         // check if LParen, number or identifier
         while self.peek().token_type == "LPAREN"
-            || self.peek().token_type == "NUMBER"
-            || self.peek().token_type == "IDENTIFIER"
         {
             let right = self.handle_factor()?;
             left = Expression::BinOp(Box::new(left), Op::Multiply, Box::new(right), None);
         }
-
 
 
         Ok(left)

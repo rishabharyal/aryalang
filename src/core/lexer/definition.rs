@@ -25,6 +25,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
         let mut token_string = String::new();
         let mut chars = self.input.chars().peekable();
         while let Some(ch) = chars.next() {
+
             if ch == '\n' {
                 self.line_number += 1;
             }
@@ -54,17 +55,39 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
                 continue;
             }
 
+
+            // If the token_string is a numeric, then we should push the `.` character to it.
+            if is_token_numeric {
+                if ch == '.' {
+                    token_string.push(ch);
+                    continue;
+                } else if ch.is_numeric() {
+                    token_string.push(ch);
+                    continue;
+                }
+
+                is_token_numeric = false;
+                tokens.push(Token::new(
+                    "NUMBER".to_string(),
+                    token_string.clone(),
+                    self.line_number,
+                ));
+                token_string.clear();
+            }
+
             // At this point we know that its not string literal we are working with.
 
             // If its a single valued token like +, -, etc, then we should push the token to the tokens vector and continue
             if let Some(token_type) = Self::get_single_valued_token(ch) {
                 // Although its a single value token, we need to check if the next character is characters like =, etc so that we can handle <=, >=, ==, etc
                 if let Some(next_ch) = chars.peek() {
+                    // if there are any token bore this some next_ch, just add it.
                     if Self::handle_compound_operator(&mut tokens, ch, next_ch, self.line_number) {
                         chars.next();
                         continue;
                     }
                 }
+
                 Self::push_token(
                     &mut tokens,
                     &mut is_token_numeric,
@@ -103,17 +126,6 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
                 is_token_numeric = true;
                 token_string.push(ch);
                 continue;
-            }
-
-            // If the token_string is a numeric, then we should push the `.` character to it.
-            if is_token_numeric {
-                if ch == '.' {
-                    token_string.push(ch);
-                    continue;
-                } else {
-                    // Throw error because we got unexpected character after numeric
-                    panic!("Unexpected character after numeric");
-                }
             }
 
             // If ch is not a number, then we should push the character to the token_string

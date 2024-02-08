@@ -87,6 +87,10 @@ impl Analyzer {
         }
     }
 
+    fn set_variables(&mut self, variables: Arc<Mutex<HashMap<String, Variable>>>) {
+        self.variables = variables;
+    }
+
     pub fn parse(&mut self) -> Result<bool, AnalysisError> {
         // loop through the statements and start executing them
         // Print all the statements
@@ -154,25 +158,25 @@ impl Analyzer {
                             if expression_type.expression_type != Type::Bool {
                                 return Err(AnalysisError::NonBooleanCondition { expected: "Boolean".to_string(), found: expression_type.expression_type.to_string() });
                             }
+
+                            if expression_type.value == "true" {
+                                let mut analyzer = Analyzer::new(_statements.clone());
+                                analyzer.set_variables(self.variables.clone());
+                                match analyzer.parse() {
+                                    Ok(_) => {
+                                        // Do nothing
+                                    },
+                                    Err(e) => return Err(e),
+                                }
+                            }
                         },
                         Err(e) => return Err(e),
                     }
-                    // Handle IfStatement variant
-                    // `condition` is a &Box<Expression> and `statements` is a &Vec<Statement>
                 },
             }
         }
 
-        // Print all the variables
-        let variables_guard = self.variables.lock().unwrap();
-        for (key, value) in variables_guard.iter() {
-            println!("Var found::: {}: {:?}", key, value.value);
-        }
-        drop(variables_guard);
-
         return Ok(true);
-        // We will parse and execute
-
     }
 }
 
@@ -259,7 +263,6 @@ impl ExpressionTypeEvaluator {
                                     Op::Multiply => {
                                         // Only ok if both of them are integers
                                         if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
-                                            println!("f {} s {}", first_expression_type.value, second_expression_type.value); 
                                             let result = first_expression_type.value.parse::<i32>().unwrap() * second_expression_type.value.parse::<i32>().unwrap();
                                             return Ok(ExpressionResult {
                                                 value: result.to_string(),
@@ -297,7 +300,6 @@ impl ExpressionTypeEvaluator {
                                     },
                                     Op::Equals => {
                                         // Only ok if both of them are integers
-                                        println!("f {} s {}", first_expression_type.value, second_expression_type.value);
                                         if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
                                             let result = first_expression_type.value.parse::<i32>().unwrap() == second_expression_type.value.parse::<i32>().unwrap();
                                             return Ok(ExpressionResult {
@@ -328,7 +330,8 @@ impl ExpressionTypeEvaluator {
                                                 }
 
                                                 // Update the value of the variable involved in first expression
-                                                let variable = variables_guard.get_mut(&first_expression_type.value).unwrap();
+
+                                                let variable = variables_guard.get_mut(&identifier_name).unwrap();
                                                 variable.value = second_expression_type.value.to_string();
                                                 drop(variables_guard);
                                                 return Ok(first_expression_type);
