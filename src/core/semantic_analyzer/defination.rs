@@ -464,7 +464,9 @@ impl FunctionExecutor {
                 FunctionModule::String => {
                     match function_name.as_str() {
                         "strtoint" => {
-                            let result = params[0].value.parse::<i32>().unwrap();
+                            // sanitize the input
+                            let sanitized_input = params[0].value.trim();
+                            let result = sanitized_input.parse::<i32>().unwrap();
                             return Ok(
                                 ExpressionResult {
                                     value: result.to_string(),
