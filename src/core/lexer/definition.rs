@@ -216,6 +216,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
             RETURN => Token::new_without_line_number(RETURN.to_string(), token_string.to_string()),
             TRUE => Token::new_without_line_number(TRUE.to_string(), token_string.to_string()),
             FALSE => Token::new_without_line_number(FALSE.to_string(), token_string.to_string()),
+            FOR => Token::new_without_line_number(FOR.to_string(), token_string.to_string()),
             _ => Token::new_without_line_number("IDENTIFIER".to_string(), token_string.to_string()),
         };
         identified_token

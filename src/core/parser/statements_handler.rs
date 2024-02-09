@@ -47,6 +47,17 @@ impl<'a> StatementsHandler<'a> {
                     }
                 }
 
+                if token.token_type == "FOR" {
+                    let handler = crate::core::parser::for_statement_handler::ForStatementHandler::new(&self.tokens[self.current..]);
+                    match handler.parse() {
+                        Ok((node, consumed)) => {
+                            nodes.push(node);
+                            self.current += consumed;
+                        }
+                        Err(e) => return Err(e),
+                    }
+                }
+
 
                 // Need to handle identifier.
                 if token.token_type == "IDENTIFIER" {
