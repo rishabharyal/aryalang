@@ -17,7 +17,6 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&mut self) -> Result<Vec<Statement>, ParseError> {
-        print!("starting parsing...");
         // print all tokens
         let mut statement_handler =
             crate::core::parser::statements_handler::StatementsHandler::new(&self.tokens[0..]);

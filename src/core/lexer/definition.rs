@@ -25,7 +25,6 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
         let mut token_string = String::new();
         let mut chars = self.input.chars().peekable();
         while let Some(ch) = chars.next() {
-
             if ch == '\n' {
                 self.line_number += 1;
             }
@@ -55,6 +54,26 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
                 continue;
             }
 
+
+            // If ch is whitespace or semicolon, then we should push the token to the tokens vector and continue
+            if ch.is_whitespace() || ch == SEMICOLON {
+                // if is_token_numeric, then we push to tokens as number else as identified token
+                Self::push_token(
+                    &mut tokens,
+                    &mut is_token_numeric,
+                    &mut token_string,
+                    self.line_number,
+                );
+                is_token_numeric = false;
+                if ch == SEMICOLON {
+                    tokens.push(Token::new(
+                        "SEMICOLON".to_string(),
+                        ";".to_string(),
+                        self.line_number,
+                    ));
+                }
+                continue;
+            }
 
             // If the token_string is a numeric, then we should push the `.` character to it.
             if is_token_numeric {
@@ -99,25 +118,6 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
                     ch.to_string(),
                     self.line_number,
                 ));
-                continue;
-            }
-
-            // If ch is whitespace or semicolon, then we should push the token to the tokens vector and continue
-            if ch.is_whitespace() || ch == SEMICOLON {
-                // if is_token_numeric, then we push to tokens as number else as identified token
-                Self::push_token(
-                    &mut tokens,
-                    &mut is_token_numeric,
-                    &mut token_string,
-                    self.line_number,
-                );
-                if ch == SEMICOLON {
-                    tokens.push(Token::new(
-                        "SEMICOLON".to_string(),
-                        ";".to_string(),
-                        self.line_number,
-                    ));
-                }
                 continue;
             }
 

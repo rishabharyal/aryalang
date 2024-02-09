@@ -17,7 +17,6 @@ impl Aryalang {
             print!("{:?}", "No tokens to execute.");
             return
         }
-
         let mut seman_analyzer = core::Analyzer::new(result);
         let result_option = seman_analyzer.parse(); // returns Result<bool, error>
         match result_option {

@@ -1,5 +1,9 @@
-print("hello");
-let x = input();
-if (5 == strtoint(x)) {
-    print("world");
+println("hello");
+let y = 3.14;
+println(floattostr(y));
+let x = strtofloat(input());
+println("You entered: " + floattostr(x));
+
+if (true) {
+    println("true");
 }

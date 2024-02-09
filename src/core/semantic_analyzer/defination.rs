@@ -160,6 +160,15 @@ impl ExpressionTypeEvaluator {
                 );
             },
             Expression::Number(value, _type) => {
+                // check if the number is decimal
+                if value.contains(".") {
+                    return Ok(
+                        ExpressionResult {
+                            value: value.to_string(),
+                            expression_type: Type::Decimal
+                        }
+                    );
+                }
                 return Ok(
                     ExpressionResult {
                         value: value.to_string(),
@@ -355,6 +364,8 @@ impl ExpressionTypeEvaluator {
                     
                     let mut parameters = vec![];
                     for param in params {
+                        // print the  param
+                        // param value
                         let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(param.clone(), self.variables.clone()); 
                         match expression_type_evaluator.parse() {
                             Ok(expression_type) => {
@@ -477,6 +488,17 @@ impl FunctionExecutor {
                                 }
                             );
                         },
+                        "strtofloat" => {
+                            // sanitize the input
+                            let sanitized_input = params[0].value.trim();
+                            let result = sanitized_input.parse::<f32>().unwrap();
+                            return Ok(
+                                ExpressionResult {
+                                    value: result.to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
                         "strlen" => {
                             let result = params[0].value.len();
                             return Ok(
@@ -495,6 +517,15 @@ impl FunctionExecutor {
                     match function_name.as_str() {
                         "inttostr" => {
                             let result = params[0].value.parse::<i32>().unwrap();
+                            return Ok(
+                                ExpressionResult {
+                                    value: result.to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        "floattostr" => {
+                            let result = params[0].value.parse::<f32>().unwrap();
                             return Ok(
                                 ExpressionResult {
                                     value: result.to_string(),
@@ -563,6 +594,20 @@ fn load_native_functions() -> HashMap<String, FunctionDefination> {
         parameters_types: vec![Type::Integer],
         return_type: Type::String,
         module: FunctionModule::Math
+    });
+
+    native_functions.insert("floattostr".to_string(), FunctionDefination {
+        name: "floattostr".to_string(),
+        parameters_types: vec![Type::Decimal],
+        return_type: Type::String,
+        module: FunctionModule::Math
+    });
+
+    native_functions.insert("strtofloat".to_string(), FunctionDefination {
+        name: "strtofloat".to_string(),
+        parameters_types: vec![Type::String],
+        return_type: Type::Decimal,
+        module: FunctionModule::String
     });
 
     native_functions.insert("strlen".to_string(), FunctionDefination {
