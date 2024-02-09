@@ -21,11 +21,7 @@ impl Aryalang {
         let mut seman_analyzer = core::Analyzer::new(result);
         let result_option = seman_analyzer.parse(); // returns Result<bool, error>
         match result_option {
-            Ok(value) => {
-                if value {
-                    // Print all ok
-                    println!("All ok!")
-                }
+            Ok(_value) => {
             },
             Err(_e) => {
                 // Handle the error case, e.g., log the error, return from function, etc.

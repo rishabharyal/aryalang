@@ -18,7 +18,7 @@ if (n >= 10) {
     x = 22;
     let rishabhj = 33;
 }
-print("hello world");
+print(inttostr(out));
 "#
         .to_string(),
     );

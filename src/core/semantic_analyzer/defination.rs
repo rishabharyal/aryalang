@@ -12,6 +12,7 @@ pub struct Analyzer {
 pub enum AnalysisError {
     UndefinedVariable { expected: String },
     UndefinedFunction { expected: String, found: String },
+    ArgumentTypeMismatch { argument_name: String, expected: String, found: String },
     ArgumentCountMismatch { expected: String, found: String },
     VariableAlreadyDefined  { variable_name: String },
     IllegalOperation { expected: String, found: String, operation:  Op},
@@ -341,20 +342,40 @@ impl ExpressionTypeEvaluator {
                 let native_functions = load_native_functions();
                 if native_functions.contains_key(function_name) {
                     let native_function = native_functions.get(function_name).unwrap();
-                    let return_type = native_function.return_type.clone();
                    
                     if native_function.parameters_types.len() != params.len() {
                         return Err(AnalysisError::ArgumentCountMismatch { expected: native_function.parameters_types.len().to_string(), found: params.len().to_string() });
                     }
 
-
-
-                    return Ok(
-                        ExpressionResult {
-                            value: "".to_string(),
-                            expression_type: return_type
+                    // Also evalutate the parameters and their types, and also keep the values so
+                    // that they can be passed to the function
+                    
+                    let mut parameters = vec![];
+                    for param in params {
+                        let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(param.clone(), self.variables.clone()); 
+                        match expression_type_evaluator.parse() {
+                            Ok(expression_type) => {
+                                parameters.push(expression_type);
+                            },
+                            Err(e) => return Err(e),
                         }
-                    );
+                    }
+
+                    // lets make sure all the parameters are of the correct type
+                    for (i, param) in parameters.iter().enumerate() {
+                        if param.expression_type != native_function.parameters_types[i] {
+                            return Err(AnalysisError::ArgumentTypeMismatch { argument_name: i.to_string(), expected: native_function.parameters_types[i].to_string(), found: param.expression_type.to_string() });
+                        }
+                    }
+
+                    // if everything is ok, then lets start executing the function
+                    let mut function_executor = FunctionExecutor{};
+                    match function_executor.execute(function_name.to_string(), parameters) {
+                        Ok(result) => {
+                            return Ok(result);
+                        },
+                        Err(e) => return Err(e),
+                    }
                 }
 
                 return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
@@ -387,15 +408,11 @@ impl ExpressionTypeEvaluator {
     }
 }
 
-pub struct _FunctionExecutor {
+pub struct FunctionExecutor {
 }
 
-impl _FunctionExecutor {
-    pub fn _new() -> Self {
-        _FunctionExecutor {}
-    }
-
-    fn _execute(&mut self, function_name: String, params: Vec<ExpressionResult>) -> Result<ExpressionResult, AnalysisError> {
+impl FunctionExecutor {
+    fn execute(&mut self, function_name: String, params: Vec<ExpressionResult>) -> Result<ExpressionResult, AnalysisError> {
         let native_functions = load_native_functions();
         if native_functions.contains_key(&function_name) {
             let native_function = native_functions.get(&function_name).unwrap();
@@ -404,12 +421,84 @@ impl _FunctionExecutor {
                 return Err(AnalysisError::ArgumentCountMismatch { expected: native_function.parameters_types.len().to_string(), found: params.len().to_string() });
             }
 
-            return Ok(
-                ExpressionResult {
-                    value: "".to_string(),
-                    expression_type: return_type
+            // if everything is ok, then lets start executing the function
+            match native_function.module {
+                FunctionModule::IO => {
+                    match function_name.as_str() {
+                        "print" => {
+                            print!("{}", params[0].value);
+                            return Ok(
+                                ExpressionResult {
+                                    value: "".to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        "println" => {
+                            println!("{}", params[0].value);
+                            return Ok(
+                                ExpressionResult {
+                                    value: "".to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        "input" => {
+                            let mut input = String::new();
+                            std::io::stdin().read_line(&mut input).unwrap();
+                            return Ok(
+                                ExpressionResult {
+                                    value: input.to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        "exit" => {
+                            std::process::exit(params[0].value.parse::<i32>().unwrap());
+                        },
+                        _ => {
+                            return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
+                        }
+                    }
+                },
+                FunctionModule::String => {
+                    match function_name.as_str() {
+                        "strtoint" => {
+                            let result = params[0].value.parse::<i32>().unwrap();
+                            return Ok(
+                                ExpressionResult {
+                                    value: result.to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        "inttostr" => {
+                            let result = params[0].value.parse::<i32>().unwrap();
+                            return Ok(
+                                ExpressionResult {
+                                    value: result.to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        "strlen" => {
+                            let result = params[0].value.len();
+                            return Ok(
+                                ExpressionResult {
+                                    value: result.to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        _ => {
+                            return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
+                        }
+                    }
+                },
+                FunctionModule::Math => {
+                    return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
                 }
-            );
+            }
         }
 
         return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
@@ -462,9 +551,9 @@ fn load_native_functions() -> HashMap<String, FunctionDefination> {
 
     native_functions.insert("inttostr".to_string(), FunctionDefination {
         name: "inttostr".to_string(),
-        parameters_types: vec![Type::String],
+        parameters_types: vec![Type::Integer],
         return_type: Type::String,
-        module: FunctionModule::Math
+        module: FunctionModule::String
     });
 
     native_functions.insert("strlen".to_string(), FunctionDefination {
