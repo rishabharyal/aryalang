@@ -121,6 +121,9 @@ impl Analyzer {
                         Err(e) => return Err(e),
                     }
                 },
+                Statement::ForStatement(_, _ , _ ,_ ) => {},
+                Statement::FunctionDeclaration(_,_ ,_ ,_ ) => {},
+                
             }
         }
 
@@ -474,15 +477,6 @@ impl FunctionExecutor {
                                 }
                             );
                         },
-                        "inttostr" => {
-                            let result = params[0].value.parse::<i32>().unwrap();
-                            return Ok(
-                                ExpressionResult {
-                                    value: result.to_string(),
-                                    expression_type: return_type
-                                }
-                            );
-                        },
                         "strlen" => {
                             let result = params[0].value.len();
                             return Ok(
@@ -498,7 +492,20 @@ impl FunctionExecutor {
                     }
                 },
                 FunctionModule::Math => {
-                    return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
+                    match function_name.as_str() {
+                        "inttostr" => {
+                            let result = params[0].value.parse::<i32>().unwrap();
+                            return Ok(
+                                ExpressionResult {
+                                    value: result.to_string(),
+                                    expression_type: return_type
+                                }
+                            );
+                        },
+                        _ => {
+                            return Err(AnalysisError::UndefinedFunction { expected: function_name.to_string(), found: function_name.to_string() });
+                        }
+                    }
                 }
             }
         }
@@ -555,7 +562,7 @@ fn load_native_functions() -> HashMap<String, FunctionDefination> {
         name: "inttostr".to_string(),
         parameters_types: vec![Type::Integer],
         return_type: Type::String,
-        module: FunctionModule::String
+        module: FunctionModule::Math
     });
 
     native_functions.insert("strlen".to_string(), FunctionDefination {
