@@ -9,7 +9,12 @@ pub enum Statement {
     Assignment(String, Box<Expression>),  // Represents "x = 10;"
     ExpressionStatement(Box<Expression>), // Represents standalone expressions
     IfStatement(Box<Expression>, Vec<Statement>),
-    ForStatement(Box<Expression>, Box<Expression>, Box<Expression>, Vec<Statement>),
+    ForStatement(
+        Box<Expression>,
+        Box<Expression>,
+        Box<Expression>,
+        Vec<Statement>
+    ),
     FunctionDeclaration(String, HashMap<String, Type>, Vec<Statement>, Option<Type>),
 }
 

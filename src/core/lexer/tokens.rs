@@ -6,6 +6,7 @@ pub const ELSE: &str = "ELSE";
 pub const RETURN: &str = "RETURN";
 pub const TRUE: &str = "TRUE";
 pub const FALSE: &str = "FALSE";
+pub const FOR : &str = "FOR";
 
 // Operators
 pub const ASSIGN: char = '=';

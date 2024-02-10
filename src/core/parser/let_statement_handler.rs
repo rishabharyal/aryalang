@@ -23,7 +23,11 @@ impl<'a> LetStatementHandler<'a> {
             identifier = self.start_token[self.current].literal.clone();
             self.current += 1;
         } else {
-            panic!("Expected IDENTIFIER, got {}", token_type);
+            return Err(ParseError::UnexpectedToken {
+                expected: "IDENTIFIER".to_string(),
+                found: token_type,
+                line_number: self.start_token[self.current].line_number,
+            });
         }
 
         token_type = self.start_token[self.current].token_type.clone();
@@ -31,7 +35,11 @@ impl<'a> LetStatementHandler<'a> {
         if token_type == "ASSIGN" {
             self.current += 1;
         } else {
-            panic!("Expected ASSIGN, got {}", token_type);
+            return Err(ParseError::UnexpectedToken {
+                expected: "ASSIGN".to_string(),
+                found: token_type,
+                line_number: self.start_token[self.current].line_number,
+            });
         }
 
         // We expect an expression here, if its not expression then throw error

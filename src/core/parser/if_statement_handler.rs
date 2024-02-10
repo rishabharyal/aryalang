@@ -40,7 +40,11 @@ impl<'a> IfStatementHandler<'a> {
         if self.peek().token_type == "LBRACE" {
             self.move_ahead();
         } else {
-            panic!("Expected LBRACE, got {}", self.peek().token_type);
+            return Err(ParseError::UnexpectedToken {
+                expected: "{".to_string(),
+                found: self.peek().token_type.clone(),
+                line_number: self.peek().line_number,
+            });
         }
 
         // Now we are inside the curly brances, so we need to start handling other statements.
@@ -67,7 +71,11 @@ impl<'a> IfStatementHandler<'a> {
         if self.peek().token_type == "RBRACE" {
             self.move_ahead();
         } else {
-            panic!("Expected RBRACE, got {}", self.peek().token_type);
+            return Err(ParseError::UnexpectedToken {
+                expected: "}".to_string(),
+                found: self.peek().token_type.clone(),
+                line_number: self.peek().line_number,
+            });
         }
         
         // All good, read to return the IfStatement with expression and enclosed statements

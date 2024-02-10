@@ -115,6 +115,7 @@ impl<'a> ExpressionHandler<'a> {
                 Err(ParseError::UnexpectedToken {
                     expected: String::from("RPAREN"),
                     found: left_token_type,
+                    line_number: self.peek().line_number,
                 })
             };
         }
@@ -159,6 +160,7 @@ impl<'a> ExpressionHandler<'a> {
         Err(ParseError::UnexpectedToken {
             expected: String::from("NUMBER, LPAREN"),
             found: left_token_type,
+            line_number: self.peek().line_number,
         })
     }
 }
