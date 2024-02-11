@@ -47,6 +47,17 @@ impl<'a> StatementsHandler<'a> {
                     }
                 }
 
+                if token.token_type == "FOR" {
+                    let handler = crate::core::parser::for_statement_handler::ForStatementHandler::new(&self.tokens[self.current..]);
+                    match handler.parse() {
+                        Ok((node, consumed)) => {
+                            nodes.push(node);
+                            self.current += consumed;
+                        }
+                        Err(e) => return Err(e),
+                    }
+                }
+
 
                 // Need to handle identifier.
                 if token.token_type == "IDENTIFIER" {
@@ -69,7 +80,7 @@ impl<'a> StatementsHandler<'a> {
                         }
 
                     } else {
-                        return Err(ParseError::UnexpectedToken { expected: "ASSIGN".to_string(), found: "EOF".to_string() });
+                        return Err(ParseError::UnexpectedToken { expected: "ASSIGN".to_string(), found: "EOF".to_string(), line_number: token.line_number });
                     }
 
                     let mut handler = ExpressionHandler::new(&self.tokens[self.current..]);
@@ -87,7 +98,7 @@ impl<'a> StatementsHandler<'a> {
                     if self.is_inside_brances {
                         break;
                     }
-                    return Err(ParseError::UnexpectedToken { expected: "Statement".to_string(), found: token.token_type.to_string() });
+                    return Err(ParseError::UnexpectedToken { expected: "Statement".to_string(), found: token.token_type.to_string(), line_number: token.line_number });
                 }
             }
         }

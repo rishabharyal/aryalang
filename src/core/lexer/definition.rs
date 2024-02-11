@@ -2,7 +2,7 @@ use crate::core::lexer::token::Token;
 use crate::core::lexer::tokens::{
     AND, ASSIGN, ASTERISK, BANG, DOUBLE_QUOTES, ELSE, EQ, FALSE, FUNCTION, GT, GT_EQ, IF, LBRACE,
     LBRACKET, LET, LPAREN, LT, LT_EQ, MINUS, NOT_EQ, OR, PLUS, RBRACE, RBRACKET, RETURN, RPAREN,
-    SEMICOLON, SLASH, TRUE,
+    SEMICOLON, SLASH, TRUE, FOR
 };
 
 pub struct Lexer<'lifetime_input> {
@@ -216,6 +216,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
             RETURN => Token::new_without_line_number(RETURN.to_string(), token_string.to_string()),
             TRUE => Token::new_without_line_number(TRUE.to_string(), token_string.to_string()),
             FALSE => Token::new_without_line_number(FALSE.to_string(), token_string.to_string()),
+            FOR => Token::new_without_line_number(FOR.to_string(), token_string.to_string()),
             _ => Token::new_without_line_number("IDENTIFIER".to_string(), token_string.to_string()),
         };
         identified_token

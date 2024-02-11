@@ -7,8 +7,7 @@ pub struct Parser<'a> {
 
 #[derive(Debug, Clone)]
 pub enum ParseError {
-    UnexpectedToken { expected: String, found: String },
-    // Add more detailed error types if necessary
+    UnexpectedToken { expected: String, found: String, line_number: usize },
 }
 
 impl<'a> Parser<'a> {
@@ -17,7 +16,6 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&mut self) -> Result<Vec<Statement>, ParseError> {
-        // print all tokens
         let mut statement_handler =
             crate::core::parser::statements_handler::StatementsHandler::new(&self.tokens[0..]);
 
