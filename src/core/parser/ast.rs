@@ -45,6 +45,8 @@ pub enum Op {
     Equals,
     Assign,
     GreaterThanEqualTo,
+    GreaterThan,
+    LessThan,
 }
 
 #[derive(Debug, PartialEq, Clone)]

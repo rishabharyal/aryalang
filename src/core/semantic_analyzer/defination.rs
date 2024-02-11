@@ -121,8 +121,67 @@ impl Analyzer {
                         Err(e) => return Err(e),
                     }
                 },
-                Statement::ForStatement(_, _ , _ ,_ ) => {},
-                Statement::FunctionDeclaration(_,_ ,_ ,_ ) => {},
+                Statement::ForStatement(init_expr, condition_expr, increment_expr, statements) => {
+                    // execute the init expression
+                    let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*init_expr.clone(), self.variables.clone());
+                    match expression_type_evaluator.parse() {
+                        Ok(_expression_type) => {
+                            // Do nothing
+                        },
+                        Err(e) => return Err(e),
+                    }
+
+                    // execute the condition expression
+                    let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*condition_expr.clone(), self.variables.clone());
+                    match expression_type_evaluator.parse() {
+                        Ok(expression_type) => {
+                            if expression_type.expression_type != Type::Bool {
+                                return Err(AnalysisError::NonBooleanCondition { expected: "Boolean".to_string(), found: expression_type.expression_type.to_string() });
+                            }
+
+                            // convert the result to bool
+                            let mut condition_value = expression_type.value.parse::<bool>().unwrap();
+
+                            while condition_value {
+                                let mut analyzer = Analyzer::new(statements.clone());
+                                analyzer.set_variables(self.variables.clone());
+                                match analyzer.parse() {
+                                    Ok(_) => {
+                                        // Do nothing
+                                    },
+                                    Err(e) => return Err(e),
+                                }
+
+                                // execute the increment expression
+                                let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*increment_expr.clone(), self.variables.clone());
+                                // print increment expressions
+                                match expression_type_evaluator.parse() {
+                                    Ok(_expression_type) => {
+                                    },
+                                    Err(e) => return Err(e),
+                                }
+
+                                // execute the condition expression
+                                let mut expression_type_evaluator =  ExpressionTypeEvaluator::new(*condition_expr.clone(), self.variables.clone());
+                                match expression_type_evaluator.parse() {
+                                    Ok(expression_type) => {
+                                        if expression_type.expression_type != Type::Bool {
+                                            return Err(AnalysisError::NonBooleanCondition { expected: "Boolean".to_string(), found: expression_type.expression_type.to_string() });
+                                        }
+                                        // convert the value to bool
+                                        condition_value = expression_type.value.parse::<bool>().unwrap();
+
+                                    },
+                                    Err(e) => return Err(e),
+                                }
+                            }
+                        },
+                        Err(e) => return Err(e),
+                    }
+                },
+                Statement::FunctionDeclaration(_,_ ,_ ,_ ) => {
+
+                },
                 
             }
         }
@@ -298,7 +357,6 @@ impl ExpressionTypeEvaluator {
                                                 }
 
                                                 // Update the value of the variable involved in first expression
-
                                                 let variable = variables_guard.get_mut(&identifier_name).unwrap();
                                                 variable.value = second_expression_type.value.to_string();
                                                 drop(variables_guard);
@@ -321,6 +379,31 @@ impl ExpressionTypeEvaluator {
                                         }
 
                                         return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::GreaterThanEqualTo });
+                                    },
+                                    Op::LessThan => {
+                                        // Only ok if both of them are integers
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            // print both the values
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() < second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Bool
+                                            });
+                                        }
+
+                                        return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::LessThan });
+                                    },
+                                    Op::GreaterThan => {
+                                        // Only ok if both of them are integers
+                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer {
+                                            let result = first_expression_type.value.parse::<i32>().unwrap() > second_expression_type.value.parse::<i32>().unwrap();
+                                            return Ok(ExpressionResult {
+                                                value: result.to_string(),
+                                                expression_type: Type::Bool
+                                            });
+                                        }
+
+                                        return Err(AnalysisError::IllegalOperation { expected: "Integer".to_string(), found: "String".to_string(), operation: Op::GreaterThan });
                                     },
                                 }
                             },

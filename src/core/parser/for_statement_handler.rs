@@ -20,7 +20,7 @@ impl<'a> ForStatementHandler<'a> {
         let mut token_type = self.start_token[self.current].token_type.clone();
 
         // the token type should be open parenthesis
-        if token_type != "open_parenthesis" {
+        if token_type != "LPAREN" {
             return Err(
                 ParseError::UnexpectedToken { expected: "(".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
             ); 
@@ -39,17 +39,6 @@ impl<'a> ForStatementHandler<'a> {
             Err(e) => return Err(e),
         };
 
-        // the token type should be semicolon
-        token_type = self.start_token[self.current].token_type.clone();
-        if token_type != "semicolon" {
-            return Err(
-                ParseError::UnexpectedToken { expected: ";".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
-            );
-        }
-
-        // increment the current
-        self.current += 1;
-
         // parse the second expression
         let mut expn_handler = ExpressionHandler::new(&self.start_token[self.current..]);
         let second_expression = match expn_handler.expression() {
@@ -59,18 +48,7 @@ impl<'a> ForStatementHandler<'a> {
             }
             Err(e) => return Err(e),
         };
-
-
-        // the token type should be semicolon
-        token_type = self.start_token[self.current].token_type.clone();
-        if token_type != "semicolon" {
-            return Err(
-                ParseError::UnexpectedToken { expected: ";".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
-            );
-        }
-
-        // increment the current
-        self.current += 1;
+        println!("third expression {:?}", second_expression);
 
         // parse the third expression
         let mut expn_handler = ExpressionHandler::new(&self.start_token[self.current..]);
@@ -81,10 +59,11 @@ impl<'a> ForStatementHandler<'a> {
             }
             Err(e) => return Err(e),
         };
+
         
         // the token type should be close parenthesis
         token_type = self.start_token[self.current].token_type.clone();
-        if token_type != "close_parenthesis" {
+        if token_type != "RPAREN" {
             return Err(
                 ParseError::UnexpectedToken { expected: ")".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
             );
@@ -95,7 +74,7 @@ impl<'a> ForStatementHandler<'a> {
 
         // The token type should be open brace
         token_type = self.start_token[self.current].token_type.clone();
-        if token_type != "open_brace" {
+        if token_type != "LBRACE" {
             return Err(
                 ParseError::UnexpectedToken { expected: "{".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
             );
@@ -121,7 +100,7 @@ impl<'a> ForStatementHandler<'a> {
 
         // the token type should be close brace
         token_type = self.start_token[self.current].token_type.clone();
-        if token_type != "close_brace" {
+        if token_type != "RBRACE" {
             return Err(
                 ParseError::UnexpectedToken { expected: "}".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
             );

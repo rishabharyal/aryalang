@@ -31,24 +31,36 @@ impl<'a> ExpressionHandler<'a> {
 
         // Handle term
         let mut left = self.handle_term()?;
-        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "ASSIGN" || self.peek().token_type == "EQ" || self.peek().token_type == "GT_EQ" {
+        if self.peek().token_type == "ASSIGN" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "EQ" || self.peek().token_type == "GT_EQ" || self.peek().token_type == "GT" || self.peek().token_type == "LT" {
+            let operation = match self.peek().token_type.clone().as_str() {
+                "ASSIGN" => Op::Assign,
+                "LT_EQ" => Op::LessThanEqualTo,
+                "EQ" => Op::Equals,
+                "GT_EQ" => Op::GreaterThanEqualTo,
+                "GT" => Op::GreaterThan,
+                "LT" => Op::LessThan,
+                _ => Op::Assign,
+            };
+
+            self.move_ahead();
+            let mut expression_handler = ExpressionHandler::new(&self.start_token[self.current..]);
+            match expression_handler.expression() {
+                Ok((right, current)) => {
+                    self.current += current;
+                    left = Expression::BinOp(Box::new(left), operation, Box::new(right), None);
+                }
+                Err(e) => return Err(e),
+            }
+            return Ok((left, self.current));
+        }
+
+        while self.peek().token_type == "PLUS" || self.peek().token_type == "MINUS" {
             let operation = self.peek().token_type.clone();
             self.move_ahead();
             let right = self.handle_term()?;
             let mut op = Op::Add;
             if operation == "MINUS" {
                 op = Op::Subtract;
-            }
-            if operation == "LT_EQ" {
-                op = Op::LessThanEqualTo;
-            }
-            if operation == "ASSIGN" {
-                op = Op::Assign; }
-            if operation == "EQ" {
-                op = Op::Equals;
-            }
-            if operation == "GT_EQ" {
-                op = Op::GreaterThanEqualTo;
             }
             left = Expression::BinOp(Box::new(left), op, Box::new(right), None);
         }
