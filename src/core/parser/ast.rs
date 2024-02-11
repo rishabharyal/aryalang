@@ -13,7 +13,7 @@ pub enum Statement {
         Box<Expression>,
         Box<Expression>,
         Box<Expression>,
-        Vec<Statement>
+        Vec<Statement>,
     ),
     FunctionDeclaration(String, HashMap<String, Type>, Vec<Statement>, Option<Type>),
 }
@@ -28,7 +28,6 @@ pub enum Expression {
     UnaryOp(Op, Box<Expression>, Option<Type>),
     Boolean(bool, Option<Type>),
 }
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Parameter {
@@ -69,4 +68,3 @@ impl fmt::Display for Type {
         }
     }
 }
-

@@ -21,14 +21,16 @@ impl<'a> ForStatementHandler<'a> {
 
         // the token type should be open parenthesis
         if token_type != "LPAREN" {
-            return Err(
-                ParseError::UnexpectedToken { expected: "(".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
-            ); 
+            return Err(ParseError::UnexpectedToken {
+                expected: "(".to_string(),
+                found: token_type.clone().to_string(),
+                line_number: self.start_token[self.current].line_number,
+            });
         }
 
         // increment the current
         self.current += 1;
-        
+
         // parse the first expression
         let mut expn_handler = ExpressionHandler::new(&self.start_token[self.current..]);
         let first_expression = match expn_handler.expression() {
@@ -60,13 +62,14 @@ impl<'a> ForStatementHandler<'a> {
             Err(e) => return Err(e),
         };
 
-        
         // the token type should be close parenthesis
         token_type = self.start_token[self.current].token_type.clone();
         if token_type != "RPAREN" {
-            return Err(
-                ParseError::UnexpectedToken { expected: ")".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
-            );
+            return Err(ParseError::UnexpectedToken {
+                expected: ")".to_string(),
+                found: token_type.clone().to_string(),
+                line_number: self.start_token[self.current].line_number,
+            });
         }
 
         // increment the current
@@ -75,15 +78,17 @@ impl<'a> ForStatementHandler<'a> {
         // The token type should be open brace
         token_type = self.start_token[self.current].token_type.clone();
         if token_type != "LBRACE" {
-            return Err(
-                ParseError::UnexpectedToken { expected: "{".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
-            );
+            return Err(ParseError::UnexpectedToken {
+                expected: "{".to_string(),
+                found: token_type.clone().to_string(),
+                line_number: self.start_token[self.current].line_number,
+            });
         }
 
         // increment the current
         self.current += 1;
 
-         let mut parser = crate::core::parser::statements_handler::StatementsHandler::new(
+        let mut parser = crate::core::parser::statements_handler::StatementsHandler::new(
             &self.start_token[self.current..],
         );
 
@@ -101,9 +106,11 @@ impl<'a> ForStatementHandler<'a> {
         // the token type should be close brace
         token_type = self.start_token[self.current].token_type.clone();
         if token_type != "RBRACE" {
-            return Err(
-                ParseError::UnexpectedToken { expected: "}".to_string(), found: token_type.clone().to_string(), line_number: self.start_token[self.current].line_number}
-            );
+            return Err(ParseError::UnexpectedToken {
+                expected: "}".to_string(),
+                found: token_type.clone().to_string(),
+                line_number: self.start_token[self.current].line_number,
+            });
         }
 
         return Ok((
@@ -115,8 +122,5 @@ impl<'a> ForStatementHandler<'a> {
             ),
             self.current + 1,
         ));
-
-
-
     }
 }

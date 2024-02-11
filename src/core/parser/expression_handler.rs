@@ -31,7 +31,13 @@ impl<'a> ExpressionHandler<'a> {
 
         // Handle term
         let mut left = self.handle_term()?;
-        if self.peek().token_type == "ASSIGN" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "EQ" || self.peek().token_type == "GT_EQ" || self.peek().token_type == "GT" || self.peek().token_type == "LT" {
+        if self.peek().token_type == "ASSIGN"
+            || self.peek().token_type == "LT_EQ"
+            || self.peek().token_type == "EQ"
+            || self.peek().token_type == "GT_EQ"
+            || self.peek().token_type == "GT"
+            || self.peek().token_type == "LT"
+        {
             let operation = match self.peek().token_type.clone().as_str() {
                 "ASSIGN" => Op::Assign,
                 "LT_EQ" => Op::LessThanEqualTo,
@@ -84,12 +90,10 @@ impl<'a> ExpressionHandler<'a> {
         }
 
         // check if LParen, number or identifier
-        while self.peek().token_type == "LPAREN"
-        {
+        while self.peek().token_type == "LPAREN" {
             let right = self.handle_factor()?;
             left = Expression::BinOp(Box::new(left), Op::Multiply, Box::new(right), None);
         }
-
 
         Ok(left)
     }
@@ -156,7 +160,7 @@ impl<'a> ExpressionHandler<'a> {
                 self.move_ahead();
                 return Ok(Expression::FunctionCall(s, args, None));
             }
-            return Ok(Expression::Identifier(s, None))
+            return Ok(Expression::Identifier(s, None));
         }
 
         if left_token_type == *"TRUE" {
