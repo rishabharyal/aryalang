@@ -20,6 +20,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
 
     pub fn tokenize(mut self) -> Vec<Token> {
         let mut tokens: Vec<Token> = Vec::new();
+        let mut is_array = false;
         let mut is_literal = false;
         let mut is_token_numeric = false;
         let mut token_string = String::new();
@@ -208,9 +209,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
     fn get_identified_token(token_string: &mut String) -> Token {
         let identified_token = match token_string.to_uppercase().as_str() {
             LET => Token::new_without_line_number(LET.to_string(), token_string.to_string()),
-            FUNCTION => {
-                Token::new_without_line_number(FUNCTION.to_string(), token_string.to_string())
-            }
+            FUNCTION => Token::new_without_line_number(FUNCTION.to_string(), token_string.to_string()),
             IF => Token::new_without_line_number(IF.to_string(), token_string.to_string()),
             ELSE => Token::new_without_line_number(ELSE.to_string(), token_string.to_string()),
             RETURN => Token::new_without_line_number(RETURN.to_string(), token_string.to_string()),
