@@ -113,7 +113,7 @@ impl<'a> ForStatementHandler<'a> {
             });
         }
 
-        return Ok((
+        Ok((
             Statement::ForStatement(
                 Box::new(first_expression),
                 Box::new(second_expression),
@@ -121,6 +121,6 @@ impl<'a> ForStatementHandler<'a> {
                 statements,
             ),
             self.current + 1,
-        ));
+        ))
     }
 }

@@ -27,7 +27,22 @@ impl<'a> ExpressionHandler<'a> {
     }
 
     pub fn expression(&mut self) -> Result<(Expression, usize), ParseError> {
-        // print tokens
+        // handle arrays as well
+        if self.peek().token_type == "LBRACKET" {
+            let mut array = Vec::new();
+            self.move_ahead();
+            while self.peek().token_type != "RBRACKET" {
+                match self.expression() {
+                    Ok((expression, _)) => array.push(expression),
+                    Err(e) => return Err(e),
+                }
+                if self.peek().token_type == "COMMA" {
+                    self.move_ahead();
+                }
+            }
+            self.move_ahead();
+            return Ok((Expression::Array(array, None), self.current));
+        }
 
         // Handle term
         let mut left = self.handle_term()?;

@@ -94,10 +94,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
 
             // If the token_string is a numeric, then we should push the `.` character to it.
             if is_token_numeric {
-                if ch == '.' {
-                    token_string.push(ch);
-                    continue;
-                } else if ch.is_numeric() {
+                if ch == '.' || ch.is_numeric() {
                     token_string.push(ch);
                     continue;
                 }
