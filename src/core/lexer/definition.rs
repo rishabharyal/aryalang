@@ -1,8 +1,8 @@
 use crate::core::lexer::token::Token;
 use crate::core::lexer::tokens::{
-    AND, ASSIGN, ASTERISK, BANG, DOUBLE_QUOTES, ELSE, EQ, FALSE, FOR, FUNCTION, GT, GT_EQ, IF,
-    LBRACE, LBRACKET, LET, LPAREN, LT, LT_EQ, MINUS, NOT_EQ, OR, PLUS, RBRACE, RBRACKET, RETURN,
-    RPAREN, SEMICOLON, SLASH, TRUE,
+    AND, ASSIGN, ASTERISK, BANG, COMMA, DOUBLE_QUOTES, ELSE, EQ, FALSE, FOR, FUNCTION, GT, GT_EQ,
+    IF, LBRACE, LBRACKET, LET, LPAREN, LT, LT_EQ, MINUS, NOT_EQ, OR, PLUS, RBRACE, RBRACKET,
+    RETURN, RPAREN, SEMICOLON, SLASH, TRUE,
 };
 
 pub struct Lexer<'lifetime_input> {
@@ -71,24 +71,6 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
                         self.line_number,
                     ));
                 }
-                continue;
-            }
-
-            if ch == LBRACKET {
-                tokens.push(Token::new(
-                    "LBRACKET".to_string(),
-                    "[".to_string(),
-                    self.line_number,
-                ));
-                continue;
-            }
-
-            if ch == RBRACKET {
-                tokens.push(Token::new(
-                    "RBRACKET".to_string(),
-                    "]".to_string(),
-                    self.line_number,
-                ));
                 continue;
             }
 
@@ -215,6 +197,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
             RBRACKET => Some("RBRACKET"),
             LT => Some("LT"),
             GT => Some("GT"),
+            COMMA => Some("COMMA"),
             _ => None,
         }
     }

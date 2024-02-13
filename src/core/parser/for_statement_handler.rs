@@ -50,7 +50,6 @@ impl<'a> ForStatementHandler<'a> {
             }
             Err(e) => return Err(e),
         };
-        println!("third expression {:?}", second_expression);
 
         // parse the third expression
         let mut expn_handler = ExpressionHandler::new(&self.start_token[self.current..]);

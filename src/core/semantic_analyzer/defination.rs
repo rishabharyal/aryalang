@@ -42,6 +42,10 @@ pub enum AnalysisError {
         expected: String,
         found: String,
     },
+    OutOfBoundsException {
+        expected: String,
+        found: String,
+    },
 }
 
 pub struct Variable {
@@ -225,7 +229,8 @@ impl Analyzer {
                                                 found: expression_type.expression_type.to_string(),
                                             });
                                         }
-                                        if let ExpressionValue::Bool(value) = expression_type.value {
+                                        if let ExpressionValue::Bool(value) = expression_type.value
+                                        {
                                             condition_value = value;
                                         } else {
                                             return Err(AnalysisError::NonBooleanCondition {
@@ -289,7 +294,7 @@ impl ExpressionTypeEvaluator {
                 // check if the number is decimal
                 if value.contains(".") {
                     return Ok(ExpressionResult {
-                        value: ExpressionValue::Decimal(value.parse::<f32>().unwrap()), 
+                        value: ExpressionValue::Decimal(value.parse::<f32>().unwrap()),
                         expression_type: Type::Decimal,
                     });
                 }
@@ -303,13 +308,13 @@ impl ExpressionTypeEvaluator {
                     value: ExpressionValue::Bool(value.to_string() == "true"),
                     expression_type: Type::Bool,
                 });
-            },
+            }
             Expression::Array(expressions, _) => {
-                // process each items from an array, and return the processed array
                 let mut array = vec![];
                 let mut last_type = Type::Void;
                 for expression in expressions {
-                    let mut expression_type_evaluator = ExpressionTypeEvaluator::new(expression.clone(), self.variables.clone());
+                    let mut expression_type_evaluator =
+                        ExpressionTypeEvaluator::new(expression.clone(), self.variables.clone());
                     match expression_type_evaluator.parse() {
                         Ok(expression) => {
                             let expression_type = expression.expression_type.clone();
@@ -345,12 +350,21 @@ impl ExpressionTypeEvaluator {
                             Ok(second_expression_type) => {
                                 match operator {
                                     Op::Add => {
-                                        if first_expression_type.expression_type == Type::String && second_expression_type.expression_type == Type::String
+                                        if first_expression_type.expression_type == Type::String
+                                            && second_expression_type.expression_type
+                                                == Type::String
                                         {
-                                            if let ExpressionValue::String(first) = first_expression_type.value {
-                                                if let ExpressionValue::String(second) = second_expression_type.value {
+                                            if let ExpressionValue::String(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::String(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::String(format!("{}{}", first, second)),
+                                                        value: ExpressionValue::String(format!(
+                                                            "{}{}",
+                                                            first, second
+                                                        )),
                                                         expression_type: Type::String,
                                                     });
                                                 }
@@ -364,12 +378,20 @@ impl ExpressionTypeEvaluator {
                                         }
 
                                         // Ok if both are integers
-                                        if first_expression_type.expression_type == Type::Integer && second_expression_type.expression_type == Type::Integer
+                                        if first_expression_type.expression_type == Type::Integer
+                                            && second_expression_type.expression_type
+                                                == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Integer(first + second),
+                                                        value: ExpressionValue::Integer(
+                                                            first + second,
+                                                        ),
                                                         expression_type: Type::Integer,
                                                     });
                                                 }
@@ -377,12 +399,20 @@ impl ExpressionTypeEvaluator {
                                         }
 
                                         // Ok if both are decimals
-                                        if first_expression_type.expression_type == Type::Decimal && second_expression_type.expression_type == Type::Decimal
+                                        if first_expression_type.expression_type == Type::Decimal
+                                            && second_expression_type.expression_type
+                                                == Type::Decimal
                                         {
-                                            if let ExpressionValue::Decimal(first) = first_expression_type.value {
-                                                if let ExpressionValue::Decimal(second) = second_expression_type.value {
+                                            if let ExpressionValue::Decimal(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Decimal(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Decimal(first + second),
+                                                        value: ExpressionValue::Decimal(
+                                                            first + second,
+                                                        ),
                                                         expression_type: Type::Decimal,
                                                     });
                                                 }
@@ -391,7 +421,11 @@ impl ExpressionTypeEvaluator {
 
                                         return Err(AnalysisError::IllegalOperation {
                                             expected: "Integer, String, Decimal".to_string(),
-                                            found: format!("{} and {}", first_expression_type.expression_type, second_expression_type.expression_type),
+                                            found: format!(
+                                                "{} and {}",
+                                                first_expression_type.expression_type,
+                                                second_expression_type.expression_type
+                                            ),
                                             operation: Op::Add,
                                         });
                                     }
@@ -401,10 +435,16 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Integer(first - second),
+                                                        value: ExpressionValue::Integer(
+                                                            first - second,
+                                                        ),
                                                         expression_type: Type::Integer,
                                                     });
                                                 }
@@ -416,16 +456,21 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Decimal
                                         {
-                                            if let ExpressionValue::Decimal(first) = first_expression_type.value {
-                                                if let ExpressionValue::Decimal(second) = second_expression_type.value {
+                                            if let ExpressionValue::Decimal(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Decimal(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Decimal(first - second),
+                                                        value: ExpressionValue::Decimal(
+                                                            first - second,
+                                                        ),
                                                         expression_type: Type::Decimal,
                                                     });
                                                 }
                                             }
                                         }
-                                        
 
                                         return Err(AnalysisError::IllegalOperation {
                                             expected: "Integer".to_string(),
@@ -439,10 +484,16 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Integer(first * second),
+                                                        value: ExpressionValue::Integer(
+                                                            first * second,
+                                                        ),
                                                         expression_type: Type::Integer,
                                                     });
                                                 }
@@ -454,10 +505,16 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Decimal
                                         {
-                                            if let ExpressionValue::Decimal(first) = first_expression_type.value {
-                                                if let ExpressionValue::Decimal(second) = second_expression_type.value {
+                                            if let ExpressionValue::Decimal(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Decimal(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Decimal(first * second),
+                                                        value: ExpressionValue::Decimal(
+                                                            first * second,
+                                                        ),
                                                         expression_type: Type::Decimal,
                                                     });
                                                 }
@@ -476,10 +533,16 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Integer(first / second),
+                                                        value: ExpressionValue::Integer(
+                                                            first / second,
+                                                        ),
                                                         expression_type: Type::Integer,
                                                     });
                                                 }
@@ -491,10 +554,16 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Decimal
                                         {
-                                            if let ExpressionValue::Decimal(first) = first_expression_type.value {
-                                                if let ExpressionValue::Decimal(second) = second_expression_type.value {
+                                            if let ExpressionValue::Decimal(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Decimal(second) =
+                                                    second_expression_type.value
+                                                {
                                                     return Ok(ExpressionResult {
-                                                        value: ExpressionValue::Decimal(first / second),
+                                                        value: ExpressionValue::Decimal(
+                                                            first / second,
+                                                        ),
                                                         expression_type: Type::Decimal,
                                                     });
                                                 }
@@ -513,8 +582,12 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     let result = first <= second;
                                                     return Ok(ExpressionResult {
                                                         value: ExpressionValue::Bool(result),
@@ -536,8 +609,12 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     let result = first == second;
                                                     return Ok(ExpressionResult {
                                                         value: ExpressionValue::Bool(result),
@@ -608,15 +685,19 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     let result = first >= second;
                                                     return Ok(ExpressionResult {
                                                         value: ExpressionValue::Bool(result),
                                                         expression_type: Type::Bool,
                                                     });
                                                 }
-                                            } 
+                                            }
                                         }
 
                                         return Err(AnalysisError::IllegalOperation {
@@ -631,15 +712,19 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     let result = first < second;
                                                     return Ok(ExpressionResult {
                                                         value: ExpressionValue::Bool(result),
                                                         expression_type: Type::Bool,
                                                     });
                                                 }
-                                            } 
+                                            }
                                         }
 
                                         return Err(AnalysisError::IllegalOperation {
@@ -654,8 +739,12 @@ impl ExpressionTypeEvaluator {
                                             && second_expression_type.expression_type
                                                 == Type::Integer
                                         {
-                                            if let ExpressionValue::Integer(first) = first_expression_type.value {
-                                                if let ExpressionValue::Integer(second) = second_expression_type.value {
+                                            if let ExpressionValue::Integer(first) =
+                                                first_expression_type.value
+                                            {
+                                                if let ExpressionValue::Integer(second) =
+                                                    second_expression_type.value
+                                                {
                                                     let result = first > second;
                                                     return Ok(ExpressionResult {
                                                         value: ExpressionValue::Bool(result),
@@ -730,6 +819,15 @@ impl ExpressionTypeEvaluator {
                     // lets make sure all the parameters are of the correct type
                     for (i, param) in parameters.iter().enumerate() {
                         if param.expression_type != native_function.parameters_types[i] {
+                            // We need this to match the boxed parameters
+                            match param.expression_type {
+                                Type::Array(_) => {
+                                    if let Type::Array(_) = native_function.parameters_types[i] {
+                                        continue;
+                                    }
+                                }
+                                _ => {}
+                            }
                             return Err(AnalysisError::ArgumentTypeMismatch {
                                 argument_name: i.to_string(),
                                 expected: native_function.parameters_types[i].to_string(),
@@ -785,6 +883,167 @@ impl ExpressionTypeEvaluator {
                     Err(e) => return Err(e),
                 }
             }
+            Expression::ArrayAccess(identifer, expression, _) => {
+                // identifier is now string, so check in the variables
+                let variables_guard = self.variables.lock().unwrap();
+                if !variables_guard.contains_key(identifer) {
+                    drop(variables_guard);
+                    return Err(AnalysisError::UndefinedVariable {
+                        expected: identifer.to_string(),
+                    });
+                }
+
+                // get the variable and return the type
+                let variable = variables_guard.get(identifer).unwrap();
+                let var_type = variable.variable_type.clone();
+                let var_value = variable.value.clone();
+                drop(variables_guard);
+
+                // check if the type is array
+                if let Type::Array(inner_type) = &var_type {
+                    // check if the expression is integer
+                    let mut expression_type_evaluator =
+                        ExpressionTypeEvaluator::new(*expression.clone(), self.variables.clone());
+                    match expression_type_evaluator.parse() {
+                        Ok(expression_type) => {
+                            if expression_type.expression_type != Type::Integer {
+                                return Err(AnalysisError::MismatchedTypes {
+                                    expected: Type::Integer.to_string(),
+                                    found: expression_type.expression_type.to_string(),
+                                });
+                            }
+
+                            // get the value
+                            if let ExpressionValue::Integer(index) = expression_type.value {
+                                if let ExpressionValue::Array(array) = var_value {
+                                    if index as usize >= array.len() {
+                                        return Err(AnalysisError::OutOfBoundsException {
+                                            expected: array.len().to_string(),
+                                            found: index.to_string(),
+                                        });
+                                    }
+
+                                    match **inner_type {
+                                        Type::Integer => {
+                                            if let ExpressionValue::Integer(value) =
+                                                array[index as usize].value
+                                            {
+                                                return Ok(ExpressionResult {
+                                                    value: ExpressionValue::Integer(value),
+                                                    expression_type: Type::Integer,
+                                                });
+                                            }
+                                            return Err(AnalysisError::MismatchedTypes {
+                                                expected: Type::Integer.to_string(),
+                                                found: array[index as usize]
+                                                    .expression_type
+                                                    .to_string(),
+                                            });
+                                        }
+                                        Type::Decimal => {
+                                            if let ExpressionValue::Decimal(value) =
+                                                array[index as usize].value
+                                            {
+                                                return Ok(ExpressionResult {
+                                                    value: ExpressionValue::Decimal(value),
+                                                    expression_type: Type::Decimal,
+                                                });
+                                            }
+                                            return Err(AnalysisError::MismatchedTypes {
+                                                expected: Type::Decimal.to_string(),
+                                                found: array[index as usize]
+                                                    .expression_type
+                                                    .to_string(),
+                                            });
+                                        }
+                                        Type::String => {
+                                            if let ExpressionValue::String(value) =
+                                                &array[index as usize].value
+                                            {
+                                                return Ok(ExpressionResult {
+                                                    value: ExpressionValue::String(
+                                                        value.to_string(),
+                                                    ),
+                                                    expression_type: Type::String,
+                                                });
+                                            }
+
+                                            return Err(AnalysisError::MismatchedTypes {
+                                                expected: Type::String.to_string(),
+                                                found: array[index as usize]
+                                                    .expression_type
+                                                    .to_string(),
+                                            });
+                                        }
+                                        Type::Bool => {
+                                            if let ExpressionValue::Bool(value) =
+                                                array[index as usize].value
+                                            {
+                                                return Ok(ExpressionResult {
+                                                    value: ExpressionValue::Bool(value),
+                                                    expression_type: Type::Bool,
+                                                });
+                                            }
+
+                                            return Err(AnalysisError::MismatchedTypes {
+                                                expected: Type::Bool.to_string(),
+                                                found: array[index as usize]
+                                                    .expression_type
+                                                    .to_string(),
+                                            });
+                                        }
+                                        Type::Array(_) => {
+                                            if let ExpressionValue::Array(value) =
+                                                &array[index as usize].value
+                                            {
+                                                return Ok(ExpressionResult {
+                                                    value: ExpressionValue::Array(value.to_vec()),
+                                                    expression_type: Type::Array(Box::new(
+                                                        Type::Integer,
+                                                    )),
+                                                });
+                                            }
+                                            return Err(AnalysisError::MismatchedTypes {
+                                                expected: Type::Array(Box::new(Type::Integer))
+                                                    .to_string(),
+                                                found: array[index as usize]
+                                                    .expression_type
+                                                    .to_string(),
+                                            });
+                                        }
+                                        Type::Any => {
+                                            return Ok(ExpressionResult {
+                                                value: ExpressionValue::String("".to_string()),
+                                                expression_type: Type::String,
+                                            });
+                                        }
+                                        Type::Void => {
+                                            return Ok(ExpressionResult {
+                                                value: ExpressionValue::String("".to_string()),
+                                                expression_type: Type::String,
+                                            });
+                                        }
+                                    }
+                                }
+
+                                return Err(AnalysisError::MismatchedTypes {
+                                    expected: Type::Array(Box::new(Type::Integer)).to_string(),
+                                    found: var_type.to_string(),
+                                });
+                            }
+                            return Err(AnalysisError::MismatchedTypes {
+                                expected: Type::Integer.to_string(),
+                                found: expression_type.expression_type.to_string(),
+                            });
+                        }
+                        Err(e) => return Err(e),
+                    }
+                }
+                return Err(AnalysisError::MismatchedTypes {
+                    expected: Type::Array(Box::new(Type::Integer)).to_string(),
+                    found: var_type.to_string(),
+                });
+            }
         }
     }
 }
@@ -838,12 +1097,10 @@ impl FunctionExecutor {
                         });
                     }
                     "exit" => {
-                        std::process::exit(
-                            match params[0].value {
-                                ExpressionValue::Integer(value) => value,
-                                _ => 0,
-                            }
-                        );
+                        std::process::exit(match params[0].value {
+                            ExpressionValue::Integer(value) => value,
+                            _ => 0,
+                        });
                     }
                     _ => {
                         return Err(AnalysisError::UndefinedFunction {
@@ -863,7 +1120,7 @@ impl FunctionExecutor {
                                     value: ExpressionValue::Integer(result),
                                     expression_type: return_type,
                                 });
-                            } 
+                            }
                         }
                         "strtofloat" => {
                             // sanitize the input
@@ -917,6 +1174,22 @@ impl FunctionExecutor {
                         });
                     }
                 },
+                FunctionModule::Array => match function_name.as_str() {
+                    "array_length" => {
+                        if let ExpressionValue::Array(value) = &params[0].value {
+                            return Ok(ExpressionResult {
+                                value: ExpressionValue::Integer(value.len() as i32),
+                                expression_type: return_type,
+                            });
+                        }
+                    }
+                    _ => {
+                        return Err(AnalysisError::UndefinedFunction {
+                            expected: function_name.to_string(),
+                            found: function_name.to_string(),
+                        });
+                    }
+                },
             }
         }
 
@@ -938,6 +1211,7 @@ pub enum FunctionModule {
     IO,
     Math,
     String,
+    Array,
 }
 
 fn load_native_functions() -> HashMap<String, FunctionDefination> {
@@ -1029,6 +1303,16 @@ fn load_native_functions() -> HashMap<String, FunctionDefination> {
             parameters_types: vec![Type::Integer],
             return_type: Type::String,
             module: FunctionModule::IO,
+        },
+    );
+
+    native_functions.insert(
+        "array_length".to_string(),
+        FunctionDefination {
+            name: "array_length".to_string(),
+            parameters_types: vec![Type::Array(Box::new(Type::Any))],
+            return_type: Type::Integer,
+            module: FunctionModule::Array,
         },
     );
 

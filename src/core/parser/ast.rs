@@ -28,6 +28,7 @@ pub enum Expression {
     UnaryOp(Op, Box<Expression>, Option<Type>),
     Boolean(bool, Option<Type>),
     Array(Vec<Expression>, Option<Type>),
+    ArrayAccess(String, Box<Expression>, Option<Type>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -57,6 +58,7 @@ pub enum Type {
     Bool,
     Decimal,
     Array(Box<Type>),
+    Any,
 }
 
 impl fmt::Display for Type {
@@ -68,6 +70,7 @@ impl fmt::Display for Type {
             Type::Void => write!(f, "Void"),
             Type::Decimal => write!(f, "Decimal"),
             Type::Array(t) => write!(f, "Array<{}>", t),
+            Type::Any => write!(f, "Any"),
         }
     }
 }

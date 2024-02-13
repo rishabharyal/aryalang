@@ -34,6 +34,7 @@ pub const LBRACE: char = '{';
 pub const RBRACE: char = '}';
 pub const LBRACKET: char = '[';
 pub const RBRACKET: char = ']';
+pub const COMMA: char = ',';
 
 // For comparison
 pub const LT: char = '<';
