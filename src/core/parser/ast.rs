@@ -13,9 +13,10 @@ pub enum Statement {
         Box<Expression>,
         Box<Expression>,
         Box<Expression>,
-        Vec<Statement>
+        Vec<Statement>,
     ),
     FunctionDeclaration(String, HashMap<String, Type>, Vec<Statement>, Option<Type>),
+    ArrayAssignment(String, Box<Expression>, Box<Expression>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -27,8 +28,9 @@ pub enum Expression {
     FunctionCall(String, Vec<Expression>, Option<Type>),
     UnaryOp(Op, Box<Expression>, Option<Type>),
     Boolean(bool, Option<Type>),
+    Array(Vec<Expression>, Option<Type>),
+    ArrayAccess(String, Box<Expression>, Option<Type>),
 }
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Parameter {
@@ -56,6 +58,8 @@ pub enum Type {
     Void,
     Bool,
     Decimal,
+    Array(Box<Type>),
+    Any,
 }
 
 impl fmt::Display for Type {
@@ -66,7 +70,8 @@ impl fmt::Display for Type {
             Type::Bool => write!(f, "Bool"),
             Type::Void => write!(f, "Void"),
             Type::Decimal => write!(f, "Decimal"),
+            Type::Array(t) => write!(f, "Array<{}>", t),
+            Type::Any => write!(f, "Any"),
         }
     }
 }
-

@@ -13,7 +13,11 @@ pub struct StatementsHandler<'a> {
 
 impl<'a> StatementsHandler<'a> {
     pub fn new(tokens: &'a [Token]) -> Self {
-        StatementsHandler { tokens, current: 0, is_inside_brances: false}
+        StatementsHandler {
+            tokens,
+            current: 0,
+            is_inside_brances: false,
+        }
     }
 
     pub fn set_blocked(&mut self) {
@@ -48,7 +52,10 @@ impl<'a> StatementsHandler<'a> {
                 }
 
                 if token.token_type == "FOR" {
-                    let handler = crate::core::parser::for_statement_handler::ForStatementHandler::new(&self.tokens[self.current..]);
+                    let handler =
+                        crate::core::parser::for_statement_handler::ForStatementHandler::new(
+                            &self.tokens[self.current..],
+                        );
                     match handler.parse() {
                         Ok((node, consumed)) => {
                             nodes.push(node);
@@ -58,37 +65,42 @@ impl<'a> StatementsHandler<'a> {
                     }
                 }
 
-
                 // Need to handle identifier.
                 if token.token_type == "IDENTIFIER" {
                     // first we need to be sure that the next token is an assignment operator.
                     if let Some(next_token) = self.tokens.get(self.current + 1) {
-                        if next_token.token_type != "ASSIGN" {
-                            // In this case, it could be a function call, a++, a--, etc.
-                            // We need to handle this.
+                        if next_token.token_type == "ASSIGN" {
                             let mut handler = ExpressionHandler::new(&self.tokens[self.current..]);
-                            match handler.expression() { 
+                            match handler.expression() {
                                 Ok((expr, consumed)) => {
                                     // Make sure a Statement node is pushed.
-
-                                    nodes.push(Statement::ExpressionStatement(Box::new(expr)));
+                                    nodes.push(Statement::Assignment(
+                                        token.literal.clone(),
+                                        Box::new(expr),
+                                    ));
                                     self.current += consumed;
-                                    continue;
                                 }
                                 Err(e) => return Err(e),
-                            } 
+                            }
                         }
-
                     } else {
-                        return Err(ParseError::UnexpectedToken { expected: "ASSIGN".to_string(), found: "EOF".to_string(), line_number: token.line_number });
+                        return Err(ParseError::UnexpectedToken {
+                            expected: "ASSIGN".to_string(),
+                            found: "EOF".to_string(),
+                            line_number: token.line_number,
+                        });
                     }
 
+                    // In this case, it could be a function call, a++, a--, etc.
+                    // We need to handle this.
                     let mut handler = ExpressionHandler::new(&self.tokens[self.current..]);
                     match handler.expression() {
                         Ok((expr, consumed)) => {
                             // Make sure a Statement node is pushed.
-                            nodes.push(Statement::Assignment(token.literal.clone(), Box::new(expr)));
+
+                            nodes.push(Statement::ExpressionStatement(Box::new(expr)));
                             self.current += consumed;
+                            continue;
                         }
                         Err(e) => return Err(e),
                     }
@@ -98,7 +110,11 @@ impl<'a> StatementsHandler<'a> {
                     if self.is_inside_brances {
                         break;
                     }
-                    return Err(ParseError::UnexpectedToken { expected: "Statement".to_string(), found: token.token_type.to_string(), line_number: token.line_number });
+                    return Err(ParseError::UnexpectedToken {
+                        expected: "Statement".to_string(),
+                        found: token.token_type.to_string(),
+                        line_number: token.line_number,
+                    });
                 }
             }
         }

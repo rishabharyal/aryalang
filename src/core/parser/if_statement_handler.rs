@@ -35,7 +35,6 @@ impl<'a> IfStatementHandler<'a> {
         let (expression, cursor) = expression_parser.expression()?;
         self.current += cursor;
 
-
         // The next token must be a left parenthesis
         if self.peek().token_type == "LBRACE" {
             self.move_ahead();
@@ -65,7 +64,7 @@ impl<'a> IfStatementHandler<'a> {
         };
 
         //self.current += cursor; // Not sure if we need this.
-        
+
         // Now that we have list of statements, we need to check if the right curly brace has been
         // closed successfully.
         if self.peek().token_type == "RBRACE" {
@@ -77,7 +76,7 @@ impl<'a> IfStatementHandler<'a> {
                 line_number: self.peek().line_number,
             });
         }
-        
+
         // All good, read to return the IfStatement with expression and enclosed statements
         Ok((
             Statement::IfStatement(Box::from(expression), statements),

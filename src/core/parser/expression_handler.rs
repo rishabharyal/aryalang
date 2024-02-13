@@ -27,11 +27,50 @@ impl<'a> ExpressionHandler<'a> {
     }
 
     pub fn expression(&mut self) -> Result<(Expression, usize), ParseError> {
-        // print tokens
+        // handle arrays as well
+        if self.peek().token_type == "LBRACKET" {
+            let mut array = Vec::new();
+            self.move_ahead();
+            while self.peek().token_type != "RBRACKET" {
+                match self.expression() {
+                    Ok((expression, _)) => array.push(expression),
+                    Err(e) => return Err(e),
+                }
+                if self.peek().token_type == "RBRACKET" {
+                    break;
+                }
+                if self.peek().token_type == "COMMA" {
+                    self.move_ahead();
+                } else {
+                    return Err(ParseError::UnexpectedToken {
+                        expected: String::from("COMMA, RBRACKET"),
+                        found: self.peek().token_type.clone(),
+                        line_number: self.peek().line_number,
+                    });
+                }
+            }
+            self.move_ahead();
+            if self.peek().token_type != "SEMICOLON" {
+                return Err(ParseError::UnexpectedToken {
+                    expected: String::from("SEMICOLON"),
+                    found: self.peek().token_type.clone(),
+                    line_number: self.peek().line_number,
+                });
+            }
+            self.move_ahead();
+            return Ok((Expression::Array(array, None), self.current));
+        }
 
         // Handle term
         let mut left = self.handle_term()?;
-        if self.peek().token_type == "ASSIGN" || self.peek().token_type == "LT_EQ" || self.peek().token_type == "EQ" || self.peek().token_type == "GT_EQ" || self.peek().token_type == "GT" || self.peek().token_type == "LT" {
+
+        if self.peek().token_type == "ASSIGN"
+            || self.peek().token_type == "LT_EQ"
+            || self.peek().token_type == "EQ"
+            || self.peek().token_type == "GT_EQ"
+            || self.peek().token_type == "GT"
+            || self.peek().token_type == "LT"
+        {
             let operation = match self.peek().token_type.clone().as_str() {
                 "ASSIGN" => Op::Assign,
                 "LT_EQ" => Op::LessThanEqualTo,
@@ -84,12 +123,10 @@ impl<'a> ExpressionHandler<'a> {
         }
 
         // check if LParen, number or identifier
-        while self.peek().token_type == "LPAREN"
-        {
+        while self.peek().token_type == "LPAREN" {
             let right = self.handle_factor()?;
             left = Expression::BinOp(Box::new(left), Op::Multiply, Box::new(right), None);
         }
-
 
         Ok(left)
     }
@@ -156,7 +193,21 @@ impl<'a> ExpressionHandler<'a> {
                 self.move_ahead();
                 return Ok(Expression::FunctionCall(s, args, None));
             }
-            return Ok(Expression::Identifier(s, None))
+            if self.peek().token_type == "LBRACKET" {
+                self.move_ahead();
+                let (expression, _) = self.expression()?;
+                if self.peek().token_type != "RBRACKET" {
+                    return Err(ParseError::UnexpectedToken {
+                        expected: String::from("RBRACKET"),
+                        found: self.peek().token_type.clone(),
+                        line_number: self.peek().line_number,
+                    });
+                }
+                self.move_ahead();
+                return Ok(Expression::ArrayAccess(s, Box::new(expression), None));
+            }
+
+            return Ok(Expression::Identifier(s, None));
         }
 
         if left_token_type == *"TRUE" {

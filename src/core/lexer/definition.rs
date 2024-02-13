@@ -1,8 +1,8 @@
 use crate::core::lexer::token::Token;
 use crate::core::lexer::tokens::{
-    AND, ASSIGN, ASTERISK, BANG, DOUBLE_QUOTES, ELSE, EQ, FALSE, FUNCTION, GT, GT_EQ, IF, LBRACE,
-    LBRACKET, LET, LPAREN, LT, LT_EQ, MINUS, NOT_EQ, OR, PLUS, RBRACE, RBRACKET, RETURN, RPAREN,
-    SEMICOLON, SLASH, TRUE, FOR
+    AND, ASSIGN, ASTERISK, BANG, COMMA, DOUBLE_QUOTES, ELSE, EQ, FALSE, FOR, FUNCTION, GT, GT_EQ,
+    IF, LBRACE, LBRACKET, LET, LPAREN, LT, LT_EQ, MINUS, NOT_EQ, OR, PLUS, RBRACE, RBRACKET,
+    RETURN, RPAREN, SEMICOLON, SLASH, TRUE,
 };
 
 pub struct Lexer<'lifetime_input> {
@@ -54,7 +54,6 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
                 continue;
             }
 
-
             // If ch is whitespace or semicolon, then we should push the token to the tokens vector and continue
             if ch.is_whitespace() || ch == SEMICOLON {
                 // if is_token_numeric, then we push to tokens as number else as identified token
@@ -77,10 +76,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
 
             // If the token_string is a numeric, then we should push the `.` character to it.
             if is_token_numeric {
-                if ch == '.' {
-                    token_string.push(ch);
-                    continue;
-                } else if ch.is_numeric() {
+                if ch == '.' || ch.is_numeric() {
                     token_string.push(ch);
                     continue;
                 }
@@ -201,6 +197,7 @@ impl<'lifetime_input> Lexer<'lifetime_input> {
             RBRACKET => Some("RBRACKET"),
             LT => Some("LT"),
             GT => Some("GT"),
+            COMMA => Some("COMMA"),
             _ => None,
         }
     }

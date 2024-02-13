@@ -7,7 +7,11 @@ pub struct Parser<'a> {
 
 #[derive(Debug, Clone)]
 pub enum ParseError {
-    UnexpectedToken { expected: String, found: String, line_number: usize },
+    UnexpectedToken {
+        expected: String,
+        found: String,
+        line_number: usize,
+    },
 }
 
 impl<'a> Parser<'a> {
