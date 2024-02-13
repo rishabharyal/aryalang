@@ -118,12 +118,7 @@ impl Analyzer {
                     let mut expression_type_evaluator =
                         ExpressionTypeEvaluator::new(*_expression.clone(), self.variables.clone());
                     match expression_type_evaluator.parse() {
-                        Ok(expression_type) => {
-                            let mut variables_guard = self.variables.lock().unwrap();
-                            let variable = variables_guard.get_mut(var_name).unwrap();
-                            variable.value = expression_type.value;
-                            drop(variables_guard);
-                        }
+                        Ok(_) => {}
                         Err(e) => return Err(e),
                     }
                 }
@@ -246,6 +241,7 @@ impl Analyzer {
                         Err(e) => return Err(e),
                     }
                 }
+                Statement::ArrayAssignment(_, _, _) => {}
                 Statement::FunctionDeclaration(_, _, _, _) => {}
             }
         }
@@ -293,13 +289,15 @@ impl ExpressionTypeEvaluator {
             Expression::Number(value, _type) => {
                 // check if the number is decimal
                 if value.contains(".") {
+                    let parsed_num = value.parse::<f32>();
                     return Ok(ExpressionResult {
-                        value: ExpressionValue::Decimal(value.parse::<f32>().unwrap()),
+                        value: ExpressionValue::Decimal(parsed_num.unwrap()),
                         expression_type: Type::Decimal,
                     });
                 }
+                let parsed_num = value.parse::<i32>().unwrap();
                 return Ok(ExpressionResult {
-                    value: ExpressionValue::Integer(value.parse::<i32>().unwrap()),
+                    value: ExpressionValue::Integer(parsed_num),
                     expression_type: Type::Integer,
                 });
             }

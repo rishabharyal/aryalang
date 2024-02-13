@@ -16,6 +16,7 @@ pub enum Statement {
         Vec<Statement>,
     ),
     FunctionDeclaration(String, HashMap<String, Type>, Vec<Statement>, Option<Type>),
+    ArrayAssignment(String, Box<Expression>, Box<Expression>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
