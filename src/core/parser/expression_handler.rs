@@ -63,7 +63,6 @@ impl<'a> ExpressionHandler<'a> {
 
         // Handle term
         let mut left = self.handle_term()?;
-
         if self.peek().token_type == "ASSIGN"
             || self.peek().token_type == "LT_EQ"
             || self.peek().token_type == "EQ"

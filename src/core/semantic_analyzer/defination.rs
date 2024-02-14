@@ -668,6 +668,10 @@ impl ExpressionTypeEvaluator {
                                                 drop(variables_guard);
                                                 return Ok(first_expression_type);
                                             }
+                                            Expression::ArrayAccess(_,_ ,_ ) => {
+                                                println!("handle array assignment...");
+                                                return Ok(first_expression_type);
+                                            } 
                                             _ => {
                                                 return Err(AnalysisError::IllegalOperation {
                                                     expected: "Identifier".to_string(),

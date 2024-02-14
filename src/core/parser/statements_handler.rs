@@ -91,6 +91,27 @@ impl<'a> StatementsHandler<'a> {
                         });
                     }
 
+                    if let Some(next_token) = self.tokens.get(self.current + 1) {
+                        if next_token.token_type == "LBRACKET" {
+                            // There is a good possibility that this is an array assignment. Good
+                            // possibility, that does not make sense at all. It does have
+                            // possibility though.
+                            let mut handler = ExpressionHandler::new(&self.tokens[self.current..]);
+                            match handler.expression() {
+                                Ok((expr, consumed)) => {
+                                    self.current += consumed;
+                                    // Its at most binary operation, so just push it.
+                                    nodes.push(Statement::ExpressionStatement(Box::new(expr)));
+                                }
+                                Err(e) => return Err(e),
+                            }
+
+                        }
+                    }
+
+                    // Handling the array assignment part
+                    
+
                     // In this case, it could be a function call, a++, a--, etc.
                     // We need to handle this.
                     let mut handler = ExpressionHandler::new(&self.tokens[self.current..]);
